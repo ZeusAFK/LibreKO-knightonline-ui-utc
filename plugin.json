@@ -1,0 +1,13 @@
+{
+  "id": "knightonline-ui-utc",
+  "name": "Under the Castle UI",
+  "version": "0.1.0",
+  "type": "ui-theme",
+  "era": "Under the Castle",
+  "description": "The Under the Castle generation of the Knight Online interface for LibreKO",
+  "author": "ZeusAFK",
+  "homepage": "https://github.com/ZeusAFK/LibreKO-knightonline-ui-utc",
+  "assembly": "bin/KnightOnlineUi.dll",
+  "entry": "KnightOnlineUi.Plugin",
+  "minClientVersion": "0.1.0"
+}

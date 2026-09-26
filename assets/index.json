@@ -1,0 +1,548 @@
+{
+ "canvas": [
+  1024,
+  768
+ ],
+ "layouts": {
+  "re_chatting_box": {
+   "file": "layouts/re_chatting_box.json",
+   "rect": [
+    1,
+    1,
+    571,
+    195
+   ],
+   "textures": [
+    "re_chatroom.png",
+    "re_main_ui_01.png",
+    "re_map_info.png",
+    "re_pop_chaos2.png",
+    "re_skill01.png"
+   ]
+  },
+  "re_hotkey": {
+   "file": "layouts/re_hotkey.json",
+   "rect": [
+    -11,
+    0,
+    479,
+    467
+   ],
+   "textures": [
+    "re_hotkey10.png",
+    "re_main_ui_01.png"
+   ]
+  },
+  "re_hpbar": {
+   "file": "layouts/re_hpbar.json",
+   "rect": [
+    0,
+    0,
+    277,
+    100
+   ],
+   "textures": [
+    "re_clan_cape.png",
+    "re_clan_window01.png",
+    "re_clan_window03.png",
+    "re_main_ui_01.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_information_box": {
+   "file": "layouts/re_information_box.json",
+   "rect": [
+    0,
+    -1,
+    296,
+    190
+   ],
+   "textures": [
+    "re_main_ui_01.png"
+   ]
+  },
+  "re_inventory": {
+   "file": "layouts/re_inventory.json",
+   "rect": [
+    0,
+    0,
+    601,
+    617
+   ],
+   "textures": [
+    "co_cos.png",
+    "icon_vault.png",
+    "ranker_inven_icon.png",
+    "re_cash_warehouse.png",
+    "re_inventory01.png",
+    "re_inventory02.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_page_state.png",
+    "re_partyboard02.png",
+    "re_skill01.png",
+    "re_skill02.png",
+    "re_skill03.png"
+   ]
+  },
+  "re_map1024": {
+   "file": "layouts/re_map1024.json",
+   "rect": [
+    0,
+    -3,
+    1029,
+    771
+   ],
+   "textures": [
+    "cmdlist_dxt.png",
+    "co_map_oreads_1.png",
+    "co_map_oreads_2.png",
+    "co_map_oreads_3.png",
+    "elmo_old_01.png",
+    "elmo_old_02.png",
+    "elmo_old_03.png",
+    "karu_old_01.png",
+    "karu_old_02.png",
+    "karu_old_03.png",
+    "re_chaos.png",
+    "re_map.png",
+    "re_page_state.png",
+    "ui_del_map1024_01.png",
+    "ui_del_map1024_02.png",
+    "ui_del_map1024_03.png",
+    "ui_el_map1024_01.png",
+    "ui_el_map1024_02.png",
+    "ui_el_map1024_03.png",
+    "ui_gae2_map_01.png",
+    "ui_gae2_map_02.png",
+    "ui_gae2_map_03.png",
+    "ui_gae_map1024_01.png",
+    "ui_gae_map1024_02.png",
+    "ui_gae_map1024_03.png",
+    "ui_gejem01.png",
+    "ui_gejem02.png",
+    "ui_gejem03.png",
+    "ui_isl_map_01.png",
+    "ui_isl_map_02.png",
+    "ui_isl_map_03.png",
+    "ui_ka_map1024_01.png",
+    "ui_ka_map1024_02.png",
+    "ui_ka_map1024_03.png",
+    "ui_map_00.png",
+    "ui_mo_map1024_01.png",
+    "ui_mo_map1024_02.png",
+    "ui_mo_map1024_03.png"
+   ]
+  },
+  "re_minimap": {
+   "file": "layouts/re_minimap.json",
+   "rect": [
+    0,
+    0,
+    350,
+    267
+   ],
+   "textures": [
+    "co_battlezone_e_small.png",
+    "re_alslaoq.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_skill02.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_msgboxok": {
+   "file": "layouts/re_msgboxok.json",
+   "rect": [
+    0,
+    0,
+    360,
+    198
+   ],
+   "textures": [
+    "re_message_box.png"
+   ]
+  },
+  "re_msgboxokcancel": {
+   "file": "layouts/re_msgboxokcancel.json",
+   "rect": [
+    0,
+    0,
+    360,
+    198
+   ],
+   "textures": [
+    "re_message_box.png"
+   ]
+  },
+  "re_page_state": {
+   "file": "layouts/re_page_state.json",
+   "rect": [
+    -8,
+    0,
+    342,
+    611
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_page_state.png",
+    "re_seed_02.png"
+   ]
+  },
+  "re_quest_mini_tip": {
+   "file": "layouts/re_quest_mini_tip.json",
+   "rect": [
+    0,
+    0,
+    206,
+    76
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_quest_npc_menu01.png",
+    "re_skill01.png"
+   ]
+  },
+  "re_skill": {
+   "file": "layouts/re_skill.json",
+   "rect": [
+    0,
+    0,
+    447,
+    759
+   ],
+   "textures": [
+    "re_skill03.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_target_framebar": {
+   "file": "layouts/re_target_framebar.json",
+   "rect": [
+    0,
+    0,
+    353,
+    111
+   ],
+   "textures": [
+    "re_mini_hp_bar.png",
+    "re_target_bar.png"
+   ]
+  },
+  "re_taskbar_main": {
+   "file": "layouts/re_taskbar_main.json",
+   "rect": [
+    -1,
+    0,
+    1926,
+    108
+   ],
+   "textures": [
+    "re_inventory02.png",
+    "re_loyalty_mark.png",
+    "re_main_bottom_bar.png",
+    "re_main_ui_02.png",
+    "re_skill01.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_various_frame": {
+   "file": "layouts/re_various_frame.json",
+   "rect": [
+    -8,
+    0,
+    342,
+    517
+   ],
+   "textures": [
+    "re_achieve_06.png",
+    "re_page_state.png",
+    "re_various_frame.png"
+   ]
+  }
+ },
+ "textures": {
+  "co_cos.png": [
+   512,
+   512
+  ],
+  "re_main_ui_01.png": [
+   512,
+   512
+  ],
+  "ui_map_00.png": [
+   512,
+   512
+  ],
+  "ui_ka_map1024_01.png": [
+   512,
+   512
+  ],
+  "ui_ka_map1024_02.png": [
+   512,
+   512
+  ],
+  "ui_ka_map1024_03.png": [
+   512,
+   512
+  ],
+  "ui_el_map1024_02.png": [
+   512,
+   512
+  ],
+  "ui_el_map1024_01.png": [
+   512,
+   512
+  ],
+  "ui_el_map1024_03.png": [
+   512,
+   512
+  ],
+  "ui_mo_map1024_01.png": [
+   512,
+   512
+  ],
+  "ui_mo_map1024_02.png": [
+   512,
+   512
+  ],
+  "ui_mo_map1024_03.png": [
+   512,
+   512
+  ],
+  "ui_del_map1024_01.png": [
+   512,
+   512
+  ],
+  "ui_del_map1024_02.png": [
+   512,
+   512
+  ],
+  "ui_del_map1024_03.png": [
+   512,
+   512
+  ],
+  "ui_gae_map1024_01.png": [
+   512,
+   512
+  ],
+  "ui_gae_map1024_02.png": [
+   512,
+   512
+  ],
+  "ui_gae_map1024_03.png": [
+   512,
+   512
+  ],
+  "ui_gae2_map_03.png": [
+   512,
+   512
+  ],
+  "ui_gae2_map_02.png": [
+   512,
+   512
+  ],
+  "ui_gae2_map_01.png": [
+   512,
+   512
+  ],
+  "cmdlist_dxt.png": [
+   512,
+   512
+  ],
+  "ui_gejem01.png": [
+   512,
+   512
+  ],
+  "ui_gejem02.png": [
+   512,
+   512
+  ],
+  "ui_gejem03.png": [
+   512,
+   512
+  ],
+  "ui_isl_map_01.png": [
+   512,
+   512
+  ],
+  "ui_isl_map_03.png": [
+   512,
+   512
+  ],
+  "ui_isl_map_02.png": [
+   512,
+   512
+  ],
+  "co_map_oreads_1.png": [
+   512,
+   512
+  ],
+  "co_map_oreads_2.png": [
+   512,
+   512
+  ],
+  "co_map_oreads_3.png": [
+   512,
+   512
+  ],
+  "co_battlezone_e_small.png": [
+   512,
+   512
+  ],
+  "re_partyboard02.png": [
+   512,
+   512
+  ],
+  "re_clan_window03.png": [
+   512,
+   512
+  ],
+  "re_chatroom.png": [
+   512,
+   512
+  ],
+  "re_page_state.png": [
+   512,
+   512
+  ],
+  "re_achieve_06.png": [
+   512,
+   512
+  ],
+  "re_quest_npc_menu01.png": [
+   512,
+   512
+  ],
+  "re_map.png": [
+   512,
+   512
+  ],
+  "re_main_ui_02.png": [
+   512,
+   512
+  ],
+  "re_message_box.png": [
+   512,
+   512
+  ],
+  "re_seed_02.png": [
+   512,
+   512
+  ],
+  "re_inventory01.png": [
+   512,
+   512
+  ],
+  "re_cash_warehouse.png": [
+   512,
+   512
+  ],
+  "re_skill01.png": [
+   512,
+   512
+  ],
+  "re_various_frame.png": [
+   512,
+   512
+  ],
+  "re_skill02.png": [
+   512,
+   512
+  ],
+  "re_chaos.png": [
+   512,
+   512
+  ],
+  "re_inventory02.png": [
+   512,
+   512
+  ],
+  "re_pop_chaos2.png": [
+   512,
+   512
+  ],
+  "re_map_info.png": [
+   512,
+   512
+  ],
+  "re_clan_cape.png": [
+   512,
+   512
+  ],
+  "re_clan_window01.png": [
+   512,
+   512
+  ],
+  "re_hotkey10.png": [
+   32,
+   32
+  ],
+  "re_skill04.png": [
+   1024,
+   1024
+  ],
+  "re_loyalty_mark.png": [
+   512,
+   512
+  ],
+  "re_mini_hp_bar.png": [
+   512,
+   512
+  ],
+  "re_warp_list_2.png": [
+   512,
+   512
+  ],
+  "re_skill03.png": [
+   128,
+   128
+  ],
+  "icon_vault.png": [
+   128,
+   128
+  ],
+  "ranker_inven_icon.png": [
+   128,
+   128
+  ],
+  "karu_old_01.png": [
+   512,
+   512
+  ],
+  "karu_old_02.png": [
+   512,
+   512
+  ],
+  "karu_old_03.png": [
+   512,
+   512
+  ],
+  "elmo_old_03.png": [
+   512,
+   512
+  ],
+  "elmo_old_02.png": [
+   512,
+   512
+  ],
+  "elmo_old_01.png": [
+   512,
+   512
+  ],
+  "re_alslaoq.png": [
+   512,
+   512
+  ],
+  "re_target_bar.png": [
+   1024,
+   1024
+  ],
+  "re_main_bottom_bar.png": [
+   2048,
+   32
+  ]
+ },
+ "missingTextures": []
+}
