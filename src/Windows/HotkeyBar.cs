@@ -324,7 +324,15 @@ public partial class HotSlot : Control
     public void TickCooldown()
     {
         if (_current.IsEmpty) { _shade.Visible = false; return; }
-        float frac = Source(Abs).Cooldown;
+        var live = Source(Abs);
+        if (live.Id != _current.Id) { Refresh(); return; }
+        if (live.Count != _current.Count || live.Enough != _current.Enough)
+        {
+            _current = live;
+            _icon.Modulate = live.Enough ? Colors.White : MissingTint;
+            _count.Text = live.Count >= 0 ? live.Count.ToString() : "";
+        }
+        float frac = live.Cooldown;
         _shade.Visible = frac > 0.001f;
         if (_shade.Visible)
         {
