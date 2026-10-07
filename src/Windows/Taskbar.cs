@@ -25,7 +25,6 @@ public partial class Taskbar : Control
         ("btn_seed_karu", "quests"),
         ("btn_question", "quests"),
         ("btn_powerup", "shoppingmall"),
-        ("btn_event", "eventquests"),
         ("btn_clanadvence", "clan"),
         ("btn_rank", "rank"),
     };

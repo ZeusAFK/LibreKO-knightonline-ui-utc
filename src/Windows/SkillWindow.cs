@@ -208,7 +208,7 @@ public partial class SkillWindow : Control
         int shown = _hovered >= 0 ? _hovered : _selected;
         var info = shown >= 0 ? _game.Skills.Info(shown) : default;
         bool has = shown >= 0 && info.Description != null;
-        _view.SetText("string_info", has ? info.Description : "");
+        _view.SetText("string_info", info.Description ?? "");
         _view.SetText("string_skill_mp", has ? $"MP consumed : {info.Mp}" : "");
         _view.SetText("string_skill_vp", "");
         _view.SetText("string_skill_point", has && info.UsesPoints ? $"Required Skill Point : {info.RequiredPoints}" : "");
