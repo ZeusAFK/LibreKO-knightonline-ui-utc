@@ -49,8 +49,21 @@ public partial class LogText : Control
     public void Append(string bbcode)
     {
         _lines.Enqueue(bbcode);
-        Trim();
-        Apply();
+        bool rebuild = false;
+        while (_lines.Count > MaxLines)
+        {
+            string dropped = _lines.Dequeue();
+            for (int n = dropped.Split('\n').Length; n > 0 && !rebuild; n--)
+                rebuild = !_label.RemoveParagraph(0, true);
+        }
+        _scroll = 0f;
+        if (rebuild) _label.Text = string.Join("\n", _lines);
+        else
+        {
+            if (_lines.Count > 1) _label.AppendText("\n");
+            _label.AppendText(bbcode);
+        }
+        Relayout();
     }
 
     public void Scroll(float pixels)
