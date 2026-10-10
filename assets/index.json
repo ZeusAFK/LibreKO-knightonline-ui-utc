@@ -151,6 +151,18 @@
     "re_warp_list_2.png"
    ]
   },
+  "re_minimenu": {
+   "file": "layouts/re_minimenu.json",
+   "rect": [
+    0,
+    -6,
+    123,
+    221
+   ],
+   "textures": [
+    "re_mailsystem_02.png"
+   ]
+  },
   "re_msgboxok": {
    "file": "layouts/re_msgboxok.json",
    "rect": [
@@ -187,6 +199,52 @@
     "re_main_ui_01.png",
     "re_page_state.png",
     "re_seed_02.png"
+   ]
+  },
+  "re_party": {
+   "file": "layouts/re_party.json",
+   "rect": [
+    0,
+    0,
+    422,
+    630
+   ],
+   "textures": [
+    "class_ns.png",
+    "com_ui_all_a001.png",
+    "com_ui_all_a004.png",
+    "common_button_0.png",
+    "ko_voice.png",
+    "misc_recastobject_final_01_0000.png",
+    "prg_class_p_a.png",
+    "prg_party_red.png",
+    "re_attendance_check.png",
+    "re_loyalty_mark.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_main_ui_11.png",
+    "re_seed_02.png",
+    "re_seed_03.png"
+   ]
+  },
+  "re_personaltrade": {
+   "file": "layouts/re_personaltrade.json",
+   "rect": [
+    0,
+    0,
+    427,
+    675
+   ],
+   "textures": [
+    "re_character_seal_01.png",
+    "re_chatroom.png",
+    "re_combinateitem01.png",
+    "re_item_seal.png",
+    "re_main_ui_01.png",
+    "re_message_box.png",
+    "re_page_state.png",
+    "re_skill01.png",
+    "re_skill04.png"
    ]
   },
   "re_quest_mini_tip": {
@@ -259,6 +317,196 @@
     "re_achieve_06.png",
     "re_page_state.png",
     "re_various_frame.png"
+   ]
+  },
+  "re_warp": {
+   "file": "layouts/re_warp.json",
+   "rect": [
+    0,
+    0,
+    382,
+    574
+   ],
+   "textures": [
+    "re_page_state.png",
+    "re_warp_list_1.png",
+    "re_warp_list_2.png",
+    "re_warp_window.png"
+   ]
+  },
+  "re_whisper_close": {
+   "file": "layouts/re_whisper_close.json",
+   "rect": [
+    0,
+    0,
+    217,
+    32
+   ],
+   "textures": [
+    "fullmoon_pap2.png",
+    "re_main_ui_02.png",
+    "re_popup.png"
+   ]
+  },
+  "re_whisper_open": {
+   "file": "layouts/re_whisper_open.json",
+   "rect": [
+    -1,
+    0,
+    410,
+    386
+   ],
+   "textures": [
+    "fullmoon_pap2.png",
+    "re_emoticon.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_popup.png",
+    "re_popup2.png",
+    "re_seed_02.png",
+    "re_skill01.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_whisper_open_1": {
+   "file": "layouts/re_whisper_open_1.json",
+   "rect": [
+    0,
+    0,
+    246,
+    284
+   ],
+   "textures": [
+    "fullmoon_pap2.png",
+    "re_emoticon.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_popup.png",
+    "re_popup2.png",
+    "re_seed_02.png",
+    "re_skill01.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_whisper_open_2": {
+   "file": "layouts/re_whisper_open_2.json",
+   "rect": [
+    0,
+    0,
+    337,
+    347
+   ],
+   "textures": [
+    "fullmoon_pap2.png",
+    "re_emoticon.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_popup.png",
+    "re_popup2.png",
+    "re_seed_02.png",
+    "re_skill01.png",
+    "re_warp_list_2.png"
+   ]
+  },
+  "re_exitmenu": {
+   "file": "layouts/re_exitmenu.json",
+   "rect": [
+    0,
+    0,
+    556,
+    544
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_akara_01.png",
+    "re_attendance_check.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_messagebox": {
+   "file": "layouts/re_messagebox.json",
+   "rect": [
+    0,
+    0,
+    360,
+    296
+   ],
+   "textures": [
+    "itemicon_1_1021_00_0.png",
+    "re_message_box.png",
+    "re_seed_02.png",
+    "ui_loding.png"
+   ]
+  },
+  "re_hair": {
+   "file": "layouts/re_hair.json",
+   "rect": [
+    0,
+    0,
+    262,
+    452
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_character_seal_02.png",
+    "re_charactercreate02.png",
+    "re_main_ui_01.png",
+    "re_seed_03.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_palette": {
+   "file": "layouts/re_palette.json",
+   "rect": [
+    0,
+    0,
+    281,
+    452
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_main_ui_01.png",
+    "re_skill04.png",
+    "ui_palette.png"
+   ]
+  },
+  "re_change_race": {
+   "file": "layouts/re_change_race.json",
+   "rect": [
+    17,
+    10,
+    689,
+    633
+   ],
+   "textures": [
+    "ko_voice.png",
+    "re_character_seal_02.png",
+    "re_charactercreate02.png",
+    "re_inventory01.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_map.png",
+    "re_message_box.png",
+    "re_partyboard03.png",
+    "re_skill01.png",
+    "re_trade_inventory.png",
+    "re_various_frame.png",
+    "re_web_01.png"
+   ]
+  },
+  "re_page_friends": {
+   "file": "layouts/re_page_friends.json",
+   "rect": [
+    -10,
+    0,
+    344,
+    517
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_page_friend.png",
+    "re_partyboard03.png",
+    "re_quest_npc_menu01.png"
    ]
   }
  },
@@ -391,6 +639,10 @@
    512,
    512
   ],
+  "common_button_0.png": [
+   1024,
+   1024
+  ],
   "re_partyboard02.png": [
    512,
    512
@@ -407,6 +659,14 @@
    512,
    512
   ],
+  "ko_voice.png": [
+   512,
+   512
+  ],
+  "re_character_seal_01.png": [
+   512,
+   512
+  ],
   "re_achieve_06.png": [
    512,
    512
@@ -415,11 +675,19 @@
    512,
    512
   ],
+  "re_attendance_check.png": [
+   1024,
+   1024
+  ],
   "re_map.png": [
    512,
    512
   ],
   "re_main_ui_02.png": [
+   512,
+   512
+  ],
+  "re_mailsystem_02.png": [
    512,
    512
   ],
@@ -459,6 +727,14 @@
    512,
    512
   ],
+  "re_combinateitem01.png": [
+   512,
+   512
+  ],
+  "re_item_seal.png": [
+   512,
+   512
+  ],
   "re_pop_chaos2.png": [
    512,
    512
@@ -474,6 +750,10 @@
   "re_clan_window01.png": [
    512,
    512
+  ],
+  "com_ui_all_a001.png": [
+   256,
+   256
   ],
   "re_hotkey10.png": [
    32,
@@ -491,7 +771,15 @@
    512,
    512
   ],
+  "re_seed_03.png": [
+   512,
+   512
+  ],
   "re_warp_list_2.png": [
+   512,
+   512
+  ],
+  "fullmoon_pap2.png": [
    512,
    512
   ],
@@ -535,13 +823,101 @@
    512,
    512
   ],
+  "re_warp_list_1.png": [
+   512,
+   512
+  ],
+  "com_ui_all_a004.png": [
+   256,
+   256
+  ],
+  "prg_party_red.png": [
+   32,
+   32
+  ],
+  "misc_recastobject_final_01_0000.png": [
+   64,
+   64
+  ],
+  "class_ns.png": [
+   16,
+   16
+  ],
+  "prg_class_p_a.png": [
+   32,
+   32
+  ],
+  "re_main_ui_11.png": [
+   512,
+   512
+  ],
   "re_target_bar.png": [
    1024,
    1024
   ],
+  "re_popup.png": [
+   512,
+   512
+  ],
   "re_main_bottom_bar.png": [
    2048,
    32
+  ],
+  "re_warp_window.png": [
+   256,
+   256
+  ],
+  "re_popup2.png": [
+   512,
+   512
+  ],
+  "re_emoticon.png": [
+   512,
+   512
+  ],
+  "re_akara_01.png": [
+   1024,
+   1024
+  ],
+  "tournament_chaos_2021_a01.png": [
+   1024,
+   1024
+  ],
+  "ui_loding.png": [
+   512,
+   512
+  ],
+  "itemicon_1_1021_00_0.png": [
+   64,
+   64
+  ],
+  "re_character_seal_02.png": [
+   512,
+   512
+  ],
+  "re_charactercreate02.png": [
+   512,
+   512
+  ],
+  "ui_palette.png": [
+   256,
+   256
+  ],
+  "re_web_01.png": [
+   512,
+   512
+  ],
+  "re_partyboard03.png": [
+   512,
+   512
+  ],
+  "re_trade_inventory.png": [
+   512,
+   512
+  ],
+  "re_page_friend.png": [
+   512,
+   512
   ]
  },
  "missingTextures": []

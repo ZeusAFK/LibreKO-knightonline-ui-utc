@@ -9,17 +9,21 @@ namespace KnightOnlineUi.Windows;
 public partial class InventoryWindow : Control
 {
     private const string LayoutName = "re_inventory";
+    private const string RankerFxButton = "Btn_RankerFx";
     private const int EquipAreaType = 1;
     private const int GridAreaType = 2;
     private const int CospreAreaType = 17;
     private const int BagAreaType = 18;
     private const int TitleBarHeight = 44;
     private const string CospreGroup = "base_cos";
+    private const string MagicBagGroup = "base_magicbag";
+    private const int FirstMagicBagSocketId = 1;
     private static readonly Vector2 CarrySize = new(36, 36);
     private const int BagTabFontSize = 11;
     private static readonly Color BagTabTextColor = new(0.96f, 0.93f, 0.80f);
 
     private readonly LayoutView _view;
+    private TextureButton? _rankerFx;
     private readonly PluginGame _game;
     private readonly WindowHost _host;
     private readonly List<ItemSlot> _slots = new();
@@ -30,6 +34,8 @@ public partial class InventoryWindow : Control
     private bool _cospreOpen;
     private int _bag;
     private int _carried = -1;
+    private TextureRect? _portrait;
+    private bool _portraitOn;
 
     public InventoryWindow(WindowHost host)
     {
@@ -50,6 +56,12 @@ public partial class InventoryWindow : Control
         _view.OnPressed("btn_open_cos", () => SetCospreOpen(!_cospreOpen));
         _view.OnPressed("btn_close_cos", () => SetCospreOpen(false));
         _view.OnPressed("btn_item_arrangement", () => _game.Inventory.Arrange());
+        if (_view.Get<TextureButton>(RankerFxButton) is { } rankerFx)
+        {
+            rankerFx.ToggleMode = true;
+            rankerFx.Toggled += shown => _game.Character.SetRankAuraShown(shown);
+            _rankerFx = rankerFx;
+        }
         var bagTabs = new ButtonGroup();
         for (int bag = 0; bag < InventoryConstants.BagSlotMax; bag++)
         {
@@ -70,8 +82,11 @@ public partial class InventoryWindow : Control
                 _slots.Add(BindSlot(control, equip));
         foreach (var (node, control) in _view.Areas(GridAreaType))
             _slots.Add(BindSlot(control, InventoryConstants.InventoryStart + int.Parse(node.Id)));
+        var bagSockets = layout.Find(MagicBagGroup);
         foreach (var (node, control) in _view.Areas(CospreAreaType))
-            _slots.Add(BindSlot(control, InventoryConstants.CospreStart + int.Parse(node.Id)));
+            _slots.Add(BindSlot(control, bagSockets != null && bagSockets.All().Contains(node)
+                ? InventoryConstants.BagSlotStart + int.Parse(node.Id) - FirstMagicBagSocketId
+                : InventoryConstants.CospreStart + int.Parse(node.Id)));
         foreach (var (node, control) in _view.Areas(BagAreaType))
             _bagSlots.Add(BindSlot(control, InventoryConstants.MagicBagStart + int.Parse(node.Id)));
 
@@ -85,6 +100,20 @@ public partial class InventoryWindow : Control
                 OnClick = () => { if (_carried < 0) return; int from = _carried; CancelCarry(); _game.Inventory.Drop(from); },
             };
             trash.GetParent().AddChild(target);
+        }
+
+        if (_view.Get("area_char") is { } charArea)
+        {
+            _portrait = new TextureRect
+            {
+                Position = charArea.Position,
+                Size = charArea.Size,
+                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                StretchMode = TextureRect.StretchModeEnum.KeepAspectCovered,
+                MouseFilter = MouseFilterEnum.Ignore,
+                ClipContents = true,
+            };
+            charArea.GetParent().AddChild(_portrait);
         }
 
         _carry = new TextureRect
@@ -207,6 +236,7 @@ public partial class InventoryWindow : Control
         _game.Character.Changed += RefreshTotals;
         _game.BecameAvailable += Refresh;
         _host.Shown += Refresh;
+        _host.Shown += ShowPortrait;
         _host.Hidden += OnHidden;
         Refresh();
     }
@@ -217,11 +247,29 @@ public partial class InventoryWindow : Control
         _game.Character.Changed -= RefreshTotals;
         _game.BecameAvailable -= Refresh;
         _host.Shown -= Refresh;
+        _host.Shown -= ShowPortrait;
         _host.Hidden -= OnHidden;
+        HidePortrait();
+    }
+
+    private void ShowPortrait()
+    {
+        if (_portrait == null || _portraitOn) return;
+        _portraitOn = true;
+        _game.Character.SetPortraitShown(true);
+        _portrait.Texture = _game.Character.Portrait;
+    }
+
+    private void HidePortrait()
+    {
+        if (!_portraitOn) return;
+        _portraitOn = false;
+        _game.Character.SetPortraitShown(false);
     }
 
     private void OnHidden()
     {
+        HidePortrait();
         CancelCarry();
         _game.Inventory.HideTooltip();
     }
@@ -245,6 +293,11 @@ public partial class InventoryWindow : Control
 
     private void RefreshTotals()
     {
+        if (_rankerFx != null && IsInstanceValid(_rankerFx))
+        {
+            _rankerFx.Visible = _game.Character.HasRankAura;
+            _rankerFx.SetPressedNoSignal(_game.Character.RankAuraShown);
+        }
         var c = _game.Character;
         _view.SetFittedText("text_gold", c.Gold.ToString("n0"));
         _view.SetFittedText("text_weight", c.MaxWeight > 0 ? $"{c.Weight / 10f:0.0}/{c.MaxWeight / 10f:0.0}" : "");

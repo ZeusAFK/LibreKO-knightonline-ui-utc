@@ -40,6 +40,7 @@ public partial class HotkeyBar : Control
     private readonly LayoutNode _vGroup;
     private readonly List<Strip> _strips = new();
     private readonly List<int> _extraPages = new();
+    private readonly List<TextureButton> _lockButtons = new();
     private readonly Control _grip;
     private bool _vertical;
     private float _mainTop;
@@ -65,6 +66,7 @@ public partial class HotkeyBar : Control
     public override void _EnterTree()
     {
         _game.Hotbar.Changed += Refresh;
+        _game.Hotbar.Ready += FlashReady;
         _game.BecameAvailable += Refresh;
         _hudLayout ??= HudLayout.Attach(this, LayoutId, _grip, DefaultPosition);
         Refresh();
@@ -73,6 +75,7 @@ public partial class HotkeyBar : Control
     public override void _ExitTree()
     {
         _game.Hotbar.Changed -= Refresh;
+        _game.Hotbar.Ready -= FlashReady;
         _game.BecameAvailable -= Refresh;
     }
 
@@ -95,6 +98,7 @@ public partial class HotkeyBar : Control
     {
         foreach (var strip in _strips) strip.View.QueueFree();
         _strips.Clear();
+        _lockButtons.Clear();
         var group = _vertical ? _vGroup : _hGroup;
         int extras = _extraPages.Count;
         float previousMainTop = _mainTop;
@@ -185,6 +189,9 @@ public partial class HotkeyBar : Control
                 OnActivate = abs => _game.Hotbar.ActivateAbs(abs),
                 OnDrop = (abs, itemId, from) => _game.Hotbar.Drop(abs, itemId, from),
                 OnClear = abs => _game.Hotbar.Clear(abs),
+                OnSelect = abs => _game.Hotbar.Select(abs),
+                SelectedAbs = () => _game.Hotbar.Selected,
+                Locked = () => _game.Hotbar.Locked,
                 OnHover = (abs, over) => { if (over) _game.Hotbar.ShowTooltip(abs); else _game.Hotbar.HideTooltip(); },
             };
             control.GetParent().AddChild(cell);
@@ -211,6 +218,11 @@ public partial class HotkeyBar : Control
             view.Hide(group, expand, "btn_change");
         }
         view.OnPressed(group, "btn_lock", () => _game.Hotbar.SetLocked(!_game.Hotbar.Locked));
+        if (view.Get<TextureButton>(group, "btn_lock") is { } lockButton)
+        {
+            lockButton.ToggleMode = true;
+            _lockButtons.Add(lockButton);
+        }
         _strips.Add(strip);
     }
 
@@ -243,8 +255,17 @@ public partial class HotkeyBar : Control
         Build();
     }
 
+    private void FlashReady(IReadOnlyList<int> skillIds)
+    {
+        foreach (var strip in _strips)
+            foreach (var slot in strip.Slots)
+                if (skillIds.Contains(slot.ShownId)) slot.Flash();
+    }
+
     private void Refresh()
     {
+        foreach (var button in _lockButtons)
+            if (IsInstanceValid(button)) button.SetPressedNoSignal(!_game.Hotbar.Locked);
         foreach (var strip in _strips)
         {
             foreach (var slot in strip.Slots) slot.Refresh();
@@ -260,7 +281,6 @@ public partial class HotSlot : Control
     private const int CountFontSize = 11;
     private const int CountInset = 2;
     private const int CountOutline = 3;
-    private static readonly Color CooldownShade = new(0f, 0f, 0f, 0.62f);
     private static readonly Color MissingTint = new(0.45f, 0.45f, 0.45f, 1f);
 
     public int SlotInPage { get; }
@@ -269,14 +289,21 @@ public partial class HotSlot : Control
     public Action<int>? OnActivate { get; set; }
     public Action<int, int, int>? OnDrop { get; set; }
     public Action<int>? OnClear { get; set; }
+    public Action<int>? OnSelect { get; set; }
     public Action<int, bool>? OnHover { get; set; }
+    public Func<int> SelectedAbs { get; set; } = () => -1;
+    public Func<bool> Locked { get; set; } = () => false;
 
     private readonly TextureRect _icon;
-    private readonly ColorRect _shade;
+    private readonly HotSlotOverlay _overlay;
     private readonly Label _count;
     private HotSlotInfo _current;
+    private bool _pressed;
+    private bool _dragging;
 
     private int Abs => AbsOf(SlotInPage);
+
+    public int ShownId => _current.Id;
 
     public HotSlot(int slotInPage)
     {
@@ -290,9 +317,8 @@ public partial class HotSlot : Control
         };
         _icon.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(_icon);
-        _shade = new ColorRect { Color = CooldownShade, MouseFilter = MouseFilterEnum.Ignore, Visible = false };
-        _shade.SetAnchorsPreset(LayoutPreset.FullRect);
-        AddChild(_shade);
+        _overlay = new HotSlotOverlay();
+        AddChild(_overlay);
         _count = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Right,
@@ -318,12 +344,15 @@ public partial class HotSlot : Control
         _icon.Modulate = _current.Enough ? Colors.White : MissingTint;
         _count.Text = _current.Count >= 0 ? _current.Count.ToString() : "";
         TooltipText = _current.Tooltip.Length > 0 ? _current.Tooltip : _current.Name;
+        _overlay.Selected = !_current.IsEmpty && SelectedAbs() == Abs;
         TickCooldown();
     }
 
+    public void Flash() => _overlay.Flash();
+
     public void TickCooldown()
     {
-        if (_current.IsEmpty) { _shade.Visible = false; return; }
+        if (_current.IsEmpty) { _overlay.Remain = 0f; return; }
         var live = Source(Abs);
         if (live.Id != _current.Id) { Refresh(); return; }
         if (live.Count != _current.Count || live.Enough != _current.Enough)
@@ -332,25 +361,44 @@ public partial class HotSlot : Control
             _icon.Modulate = live.Enough ? Colors.White : MissingTint;
             _count.Text = live.Count >= 0 ? live.Count.ToString() : "";
         }
-        float frac = live.Cooldown;
-        _shade.Visible = frac > 0.001f;
-        if (_shade.Visible)
-        {
-            _shade.AnchorTop = 1f - Mathf.Clamp(frac, 0f, 1f);
-            _shade.OffsetTop = 0f;
-        }
+        _overlay.Remain = live.Cooldown;
     }
 
     public override void _GuiInput(InputEvent ev)
     {
-        if (ev is not InputEventMouseButton { Pressed: true } mb) return;
-        if (mb.ButtonIndex == MouseButton.Left) { OnActivate?.Invoke(Abs); AcceptEvent(); }
-        else if (mb.ButtonIndex == MouseButton.Right) { OnClear?.Invoke(Abs); AcceptEvent(); }
+        if (ev is not InputEventMouseButton mb) return;
+        if (mb.ButtonIndex == MouseButton.Right)
+        {
+            if (mb.Pressed) OnSelect?.Invoke(Abs);
+            AcceptEvent();
+            return;
+        }
+        if (mb.ButtonIndex != MouseButton.Left) return;
+        if (mb.Pressed) _pressed = true;
+        else if (_pressed) { _pressed = false; OnActivate?.Invoke(Abs); }
+        AcceptEvent();
+    }
+
+    public override void _Notification(int what)
+    {
+        switch ((long)what)
+        {
+            case NotificationDragEnd:
+                if (!_dragging) return;
+                _dragging = false;
+                if (!IsDragSuccessful()) OnClear?.Invoke(Abs);
+                return;
+            case NotificationMouseExit:
+                _pressed = false;
+                return;
+        }
     }
 
     public override Variant _GetDragData(Vector2 atPosition)
     {
-        if (_current.IsEmpty) return default;
+        if (_current.IsEmpty || Locked()) return default;
+        _pressed = false;
+        _dragging = true;
         var preview = new TextureRect
         {
             Texture = _current.Icon,

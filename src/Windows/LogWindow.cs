@@ -37,7 +37,15 @@ public partial class LogWindow : Control
     private readonly LogText _log;
     private readonly ColorRect _shade;
     private readonly Control? _dragButton;
+    private readonly Vector2 _baseSize;
+    private readonly LayoutNode _layoutRoot;
+    private VerticalGrow? _grow;
+    private bool _relaying;
     private HudLayout? _hudLayout;
+
+    private static readonly HashSet<string> StretchIds = new() { "base_msgwnd", "img_background", "img_background2", "scroll", "scroll_bar", "img_scrollback", "text_message", "base_area" };
+
+    private static readonly HashSet<string> ShiftIds = new() { "btn_msgwnd_lock", "btn_item", "btn_state", "btn_system", "btn_all", "text_version", "btn_option" };
     private int _shadeIndex;
     private GameLogKind? _filter;
 
@@ -46,6 +54,7 @@ public partial class LogWindow : Control
         var kit = Plugin.Kit;
         _game = kit.Game;
         var layout = kit.Layout(LayoutName);
+        _layoutRoot = layout;
         _view = new LayoutView(kit, layout);
         MouseFilter = MouseFilterEnum.Ignore;
         Size = layout.SizeVec;
@@ -89,13 +98,48 @@ public partial class LogWindow : Control
             var which = kind;
             _view.OnPressed(button, () => { _filter = which; Reload(); });
         }
+
+        _baseSize = Size;
+        Resized += Relayout;
+        Callable.From(CaptureGrow).CallDeferred();
+    }
+
+    private void CaptureGrow()
+    {
+        var grow = new VerticalGrow();
+        grow.Add(_view, VerticalGrow.Mode.Stretch);
+        var scrollDown = _layoutRoot.Find("scroll") is { } scroll
+            ? scroll.Children.Where(n => n.IsButton && n.Id.Length == 0).Select(n => _view.ControlOf(n)).FirstOrDefault()
+            : null;
+        foreach (var (node, control) in _view.Where(_ => true))
+            grow.Add(control, control == scrollDown ? VerticalGrow.Mode.Shift
+                : StretchIds.Contains(node.Id) ? VerticalGrow.Mode.Stretch
+                : ShiftIds.Contains(node.Id) ? VerticalGrow.Mode.Shift
+                : VerticalGrow.Mode.Stay);
+        grow.Add(_shade, VerticalGrow.Mode.Stretch);
+        grow.Add(_log, VerticalGrow.Mode.Stretch);
+        foreach (var parent in grow.Stretched.Where(c => c != _shade && c != _log))
+            grow.ShiftBottomBand(parent);
+        _grow = grow;
+        Relayout();
+    }
+
+    private void Relayout()
+    {
+        if (_grow == null || _relaying) return;
+        _relaying = true;
+        if (!Mathf.IsEqualApprox(Size.X, _baseSize.X)) Size = new Vector2(_baseSize.X, Size.Y);
+        _grow.Apply(Mathf.Max(0f, Size.Y - _baseSize.Y));
+        _relaying = false;
     }
 
     public override void _EnterTree()
     {
         _game.Log.LineAdded += OnLine;
         _game.BecameAvailable += Reload;
-        _hudLayout ??= HudLayout.Attach(this, LayoutId, _dragButton, DefaultPosition, backgroundOpacityChanged: _ => CycleShade());
+        _hudLayout ??= HudLayout.Attach(this, LayoutId, _dragButton, DefaultPosition, resizable: true,
+            defaultSize: _baseSize, minimumSize: _baseSize, resizeCorner: HudLayout.Corner.TopLeft,
+            backgroundOpacityChanged: _ => CycleShade());
         Reload();
     }
 

@@ -163,6 +163,19 @@ public partial class LayoutView : Control
         return label;
     }
 
+    public void Recaption(string buttonId, string text, int fontSize, Color color)
+    {
+        if (Get(buttonId) is not { } button) return;
+        bool any = false;
+        foreach (var child in button.GetChildren())
+            if (child is Label caption)
+            {
+                caption.Text = text;
+                any = true;
+            }
+        if (!any) Caption(buttonId, text, fontSize, color);
+    }
+
     public Control MakeDragHandle(Rect2 localRect)
     {
         DragHandle = new Control

@@ -63,7 +63,8 @@ public sealed class LayoutNode
     public bool HasClick;
     public int ClickX, ClickY, ClickW, ClickH;
     public int AreaType;
-    public readonly List<LayoutNode> Children = new();
+    private List<LayoutNode> _children = new();
+    public List<LayoutNode> Children => _children;
 
     public Rect2I Rect => new(X, Y, W, H);
     public Vector2 Position => new(X, Y);
@@ -89,6 +90,33 @@ public sealed class LayoutNode
         foreach (var c in Children)
             foreach (var n in c.All())
                 yield return n;
+    }
+
+    public LayoutNode Copy(string idSuffix = "", int dy = 0)
+    {
+        var copy = (LayoutNode)MemberwiseClone();
+        copy.Id = Id.Length > 0 ? Id + idSuffix : Id;
+        copy.Y += dy;
+        copy.DragY += dy;
+        copy.ClickY += dy;
+        copy._children.Clear();
+        foreach (var child in Children) copy._children.Add(child.Copy(idSuffix, dy));
+        return copy;
+    }
+
+    public LayoutNode? ParentOf(LayoutNode child)
+    {
+        foreach (var n in All())
+            if (n.Children.Contains(child)) return n;
+        return null;
+    }
+
+    public LayoutNode? CloneBelow(string id, string idSuffix, int dy)
+    {
+        if (Find(id) is not { } original || ParentOf(original) is not { } parent) return null;
+        var clone = original.Copy(idSuffix, dy);
+        parent._children.Insert(parent._children.IndexOf(original) + 1, clone);
+        return clone;
     }
 
     public IEnumerable<LayoutNode> Images => Children.Where(c => c.IsImage);
