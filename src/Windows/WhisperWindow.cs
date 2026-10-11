@@ -1,5 +1,6 @@
 using Godot;
 using KnightOnlineUi.Layout;
+using LibreKO.Domain;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -117,6 +118,10 @@ public partial class WhisperWindow : Control
         };
         if (area != null) area.Visible = false;
         (area?.GetParent() ?? (Node)_view).AddChild(_log);
+        _log.EnableLinks(link =>
+        {
+            if (WhisperLinks.IsWebLink(link)) OS.ShellOpen(link);
+        });
         _log.Set(_game.Whispers.History(_name).Select(Format));
 
         if (layout.Find(ScrollGroup) is { } scroll)
@@ -140,8 +145,9 @@ public partial class WhisperWindow : Control
     private string Format(GameWhisperLine line)
     {
         var colour = line.Notice ? NoticeColour : line.Mine ? _mine : _theirs;
-        string who = line.Notice ? "" : line.Mine ? "" : $"{Escape(_name)} : ";
-        return $"[color=#{colour.ToHtml(false)}]{who}{Escape(line.Text)}[/color]";
+        if (line.Notice) return $"[color=#{colour.ToHtml(false)}]{WhisperLinks.Linkify(line.Text)}[/color]";
+        string who = line.Mine ? _game.Character.Name : _name;
+        return $"[color=#{colour.ToHtml(false)}]{Escape(who)} : {Escape(line.Text)}[/color]";
     }
 
     private static string Escape(string text) => text.Replace("[", "[lb]");

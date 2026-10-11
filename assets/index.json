@@ -508,6 +508,205 @@
     "re_partyboard03.png",
     "re_quest_npc_menu01.png"
    ]
+  },
+  "re_taskbar_sub": {
+   "file": "layouts/re_taskbar_sub.json",
+   "rect": [
+    -1,
+    0,
+    125,
+    397
+   ],
+   "textures": [
+    "re_inventory02.png"
+   ]
+  },
+  "re_damagemeter_party": {
+   "file": "layouts/re_damagemeter_party.json",
+   "rect": [
+    0,
+    0,
+    295,
+    186
+   ],
+   "textures": [
+    "common_button_0.png",
+    "prg_class_p_0.png",
+    "prg_class_p_1.png",
+    "prg_class_p_2.png",
+    "prg_class_p_3.png",
+    "prg_class_p_4.png"
+   ]
+  },
+  "re_map_info": {
+   "file": "layouts/re_map_info.json",
+   "rect": [
+    0,
+    0,
+    604,
+    694
+   ],
+   "textures": [
+    "certified_2020.png",
+    "com_ui_all_a001.png",
+    "re_akara_01.png",
+    "re_fishing_minigame.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_attendance_check": {
+   "file": "layouts/re_attendance_check.json",
+   "rect": [
+    0,
+    0,
+    926,
+    764
+   ],
+   "textures": [
+    "re_akara_01.png",
+    "re_attendance_check.png",
+    "re_attendance_check_us.png",
+    "re_fishing_ui01.png"
+   ]
+  },
+  "re_quest_viewer": {
+   "file": "layouts/re_quest_viewer.json",
+   "rect": [
+    0,
+    0,
+    383,
+    787
+   ],
+   "textures": [
+    "npcimg_npc_base.png",
+    "re_alslaoq.png",
+    "re_main_ui_01.png",
+    "re_page_state.png",
+    "re_quest_npc_menu01.png",
+    "re_quest_npc_menu02.png"
+   ]
+  },
+  "re_quest_seed": {
+   "file": "layouts/re_quest_seed.json",
+   "rect": [
+    0,
+    0,
+    416,
+    177
+   ],
+   "textures": [
+    "co_seed_help02.png",
+    "npcimg_s_misel01_1.png",
+    "npcimg_s_misel01_2.png",
+    "re_trade.png"
+   ]
+  },
+  "re_rebuy": {
+   "file": "layouts/re_rebuy.json",
+   "rect": [
+    0,
+    0,
+    420,
+    574
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_page_state.png",
+    "re_partyboard02.png",
+    "re_rebuy.png",
+    "re_rental_02.png"
+   ]
+  },
+  "re_uservoteselect": {
+   "file": "layouts/re_uservoteselect.json",
+   "rect": [
+    0,
+    0,
+    451,
+    370
+   ],
+   "textures": [
+    "re_chatroom.png",
+    "re_main_ui_01.png",
+    "re_message_box.png",
+    "re_seed_02.png",
+    "ui_loding.png"
+   ]
+  },
+  "re_reportnotice": {
+   "file": "layouts/re_reportnotice.json",
+   "rect": [
+    0,
+    0,
+    479,
+    311
+   ],
+   "textures": [
+    "re_message_box.png"
+   ]
+  },
+  "re_knightsmantleshop": {
+   "file": "layouts/re_knightsmantleshop.json",
+   "rect": [
+    0,
+    0,
+    503,
+    480
+   ],
+   "textures": [
+    "re_charactercreate02.png",
+    "re_chatroom.png",
+    "re_clan_window02.png",
+    "re_inventory02.png",
+    "re_main_ui_01.png",
+    "re_morumenu.png"
+   ]
+  },
+  "re_targetinfo": {
+   "file": "layouts/re_targetinfo.json",
+   "rect": [
+    0,
+    0,
+    877,
+    792
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_inventory01.png",
+    "re_skill04.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_genie": {
+   "file": "layouts/re_genie.json",
+   "rect": [
+    0,
+    0,
+    439,
+    559
+   ],
+   "textures": [
+    "re_auto_01.png",
+    "re_auto_02.png",
+    "re_mailsystem01.png",
+    "re_main_ui_01.png",
+    "re_map.png",
+    "re_page_state.png"
+   ]
+  },
+  "re_genie_sub": {
+   "file": "layouts/re_genie_sub.json",
+   "rect": [
+    0,
+    0,
+    189,
+    119
+   ],
+   "textures": [
+    "re_achieve_07.png",
+    "re_auto_02.png"
+   ]
   }
  },
  "textures": {
@@ -918,7 +1117,162 @@
   "re_page_friend.png": [
    512,
    512
+  ],
+  "prg_class_p_0.png": [
+   32,
+   32
+  ],
+  "prg_class_p_1.png": [
+   32,
+   32
+  ],
+  "prg_class_p_2.png": [
+   32,
+   32
+  ],
+  "prg_class_p_3.png": [
+   32,
+   32
+  ],
+  "prg_class_p_4.png": [
+   32,
+   32
+  ],
+  "class_0.png": [
+   16,
+   16
+  ],
+  "class_1.png": [
+   16,
+   16
+  ],
+  "class_2.png": [
+   16,
+   16
+  ],
+  "class_3.png": [
+   16,
+   16
+  ],
+  "class_4.png": [
+   16,
+   16
+  ],
+  "class_5.png": [
+   16,
+   16
+  ],
+  "class_6.png": [
+   16,
+   16
+  ],
+  "class_7.png": [
+   16,
+   16
+  ],
+  "class_8.png": [
+   16,
+   16
+  ],
+  "class_9.png": [
+   16,
+   16
+  ],
+  "prg_party_brown.png": [
+   32,
+   32
+  ],
+  "prg_party_purple.png": [
+   32,
+   32
+  ],
+  "prg_party_green.png": [
+   32,
+   32
+  ],
+  "prg_party_gray.png": [
+   32,
+   32
+  ],
+  "certified_2020.png": [
+   512,
+   512
+  ],
+  "re_fishing_minigame.png": [
+   512,
+   512
+  ],
+  "re_attendance_check_us.png": [
+   1024,
+   1024
+  ],
+  "re_fishing_ui01.png": [
+   1024,
+   1024
+  ],
+  "npcimg_npc_base.png": [
+   128,
+   128
+  ],
+  "re_quest_npc_menu02.png": [
+   512,
+   512
+  ],
+  "co_seed_help02.png": [
+   512,
+   512
+  ],
+  "re_trade.png": [
+   512,
+   512
+  ],
+  "npcimg_s_misel01_2.png": [
+   256,
+   256
+  ],
+  "npcimg_s_misel01_1.png": [
+   256,
+   256
+  ],
+  "re_rebuy.png": [
+   512,
+   512
+  ],
+  "re_rental_02.png": [
+   512,
+   512
+  ],
+  "re_clan_window02.png": [
+   512,
+   512
+  ],
+  "re_morumenu.png": [
+   512,
+   512
+  ],
+  "re_auto_01.png": [
+   512,
+   512
+  ],
+  "re_auto_02.png": [
+   512,
+   512
+  ],
+  "re_mailsystem01.png": [
+   512,
+   512
+  ],
+  "re_achieve_07.png": [
+   512,
+   512
+  ],
+  "co_pat_ui.png": [
+   512,
+   512
   ]
  },
- "missingTextures": []
+ "missingTextures": [
+  "item\\cloak_c_00.dxt",
+  "npcimg\\l_clarence01.dxt"
+ ]
 }

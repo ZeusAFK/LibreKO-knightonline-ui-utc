@@ -18,6 +18,10 @@ public partial class SkillWindow : Control
     private static readonly string[] TabFamilies = { "blade", "ranger", "mage", "cleric" };
     private static readonly string[] LabelFamilies = { "berserker", "hunter", "sorcerer", "shaman" };
     private const string MasterLabelText = "Master";
+    private const string KurianThirdTab = "btn_reaper2";
+    private const string KurianThirdLabel = "img_reaper_2";
+    private const int KurianFirstJob = 13;
+    private const int WarriorFamily = 0;
 
     private readonly LayoutView _view;
     private readonly LayoutNode _layout;
@@ -49,7 +53,7 @@ public partial class SkillWindow : Control
         _view.OnPressed("btn_left", () => TurnPage(-1));
         _view.OnPressed("btn_right", () => TurnPage(1));
         _view.OnPressed("btn_preset", () => _game.Windows.Toggle(PresetsWindow));
-        _view.Hide("btn_preset_hotkey", "btn_reaper2", "img_reaper_2");
+        _view.Hide("btn_preset_hotkey");
         for (int row = 0; row < TreeRows; row++)
         {
             int type = row;
@@ -100,7 +104,9 @@ public partial class SkillWindow : Control
 
     private void Rebuild()
     {
-        _family = Math.Clamp((_game.Character.Class % 100 - 1) % ClassesPerFamilyCycle, 0, TabFamilies.Length - 1);
+        int job = _game.Character.Class % 100;
+        bool kurian = job >= KurianFirstJob;
+        _family = kurian ? WarriorFamily : Math.Clamp((job - 1) % ClassesPerFamilyCycle, 0, TabFamilies.Length - 1);
         var tabs = _game.Skills.Tabs;
         foreach (var b in _tabButtons) b.ToggleMode = false;
         _tabButtons.Clear();
@@ -111,11 +117,14 @@ public partial class SkillWindow : Control
         for (int f = 0; f < LabelFamilies.Length; f++)
             for (int i = 0; i < FamilyTabs; i++)
                 _view.Hide($"img_{LabelFamilies[f]}_{i}");
-        _view.Hide("btn_master", "btn_public");
+        _view.Hide("btn_master", "btn_public", KurianThirdTab, KurianThirdLabel);
 
         for (int t = 0; t < tabs.Count; t++)
         {
-            string id = t == 0 ? "btn_public" : t <= FamilyTabs ? $"btn_{TabFamilies[_family]}{t - 1}" : "btn_master";
+            string id = t == 0 ? "btn_public"
+                : t == FamilyTabs && kurian ? KurianThirdTab
+                : t <= FamilyTabs ? $"btn_{TabFamilies[_family]}{t - 1}"
+                : "btn_master";
             if (_view.Get<TextureButton>(id) is not { } button) continue;
             button.Visible = true;
             button.ToggleMode = true;
@@ -126,7 +135,10 @@ public partial class SkillWindow : Control
         }
         if (_tab >= tabs.Count) _tab = 0;
         for (int i = 0; i < FamilyTabs; i++)
-            if (_view.Get($"img_{LabelFamilies[_family]}_{i}") is { } label) label.Visible = true;
+        {
+            string labelId = i == FamilyTabs - 1 && kurian ? KurianThirdLabel : $"img_{LabelFamilies[_family]}_{i}";
+            if (_view.Get(labelId) is { } label) label.Visible = true;
+        }
 
         RefreshTrees();
         RefreshPage();

@@ -338,9 +338,18 @@ public partial class LayoutView : Control
         var normal = states.TryGetValue(ButtonState.Normal, out var n) ? n.Color : caption.GetThemeColor("font_color");
         var pressed = states.TryGetValue(ButtonState.Pressed, out var p) ? p.Color : normal;
         var hover = states.TryGetValue(ButtonState.Hover, out var h) ? h.Color : normal;
+        var disabled = states.TryGetValue(ButtonState.Disabled, out var d) ? d.Color : normal;
         bool hovering = false;
-        void Apply() => caption.AddThemeColorOverride("font_color", button.ButtonPressed ? pressed : hovering ? hover : normal);
+        Color? shown = null;
+        void Apply()
+        {
+            var colour = button.Disabled ? disabled : button.ButtonPressed ? pressed : hovering ? hover : normal;
+            if (shown == colour) return;
+            shown = colour;
+            caption.AddThemeColorOverride("font_color", colour);
+        }
         button.Toggled += _ => Apply();
+        button.Draw += Apply;
         button.MouseEntered += () => { hovering = true; Apply(); };
         button.MouseExited += () => { hovering = false; Apply(); };
         Apply();
@@ -357,7 +366,9 @@ public partial class LayoutView : Control
         while (size > MinFittedFontSize && font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X > w - FitInset)
             size--;
         label.AddThemeFontSizeOverride("font_size", size);
-        label.Size = new Vector2(w, node.H);
+        var box = new Vector2(w, node.H);
+        label.Size = box;
+        if (!label.IsInsideTree()) label.Ready += () => label.Size = box;
     }
 
     private static bool IsLatin(string text) => text.Length > 0 && text.All(ch => ch < FirstCjkCodePoint);

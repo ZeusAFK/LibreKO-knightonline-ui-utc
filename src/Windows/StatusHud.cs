@@ -1,5 +1,6 @@
 using Godot;
 using KnightOnlineUi.Layout;
+using LibreKO.Domain;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -12,6 +13,9 @@ public partial class StatusHud : Control
     private const string MidBackground = "img_mid_bg";
     private const string BottomBackground = "img_bot_bg";
     private const string LocationText = "Text_VP";
+    private const string MailIcon = "img_mail_on";
+    private const string MailWindow = "mail";
+    private const int MailTipText = 10803;
 
     private readonly LayoutView _view;
     private readonly PluginGame _game;
@@ -27,7 +31,18 @@ public partial class StatusHud : Control
         MouseFilter = MouseFilterEnum.Ignore;
         AddChild(_view);
         _view.Hide("progress_HP_slow", "progress_HP_drop", "progress_HP_undead", "progress_HP_lasting", "progress_VP",
-            "img_mail_on", "img_Reporter", "img_mail_normal", MidBackground, LocationText);
+            MailIcon, "img_Reporter", "img_mail_normal", MidBackground, LocationText);
+        if (_view.Get(MailIcon) is { } mail)
+        {
+            mail.MouseFilter = MouseFilterEnum.Stop;
+            mail.TooltipText = ItemData.Text(MailTipText, "You can view the mail box by clicking the button.");
+            mail.GuiInput += ev =>
+            {
+                if (ev is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }) return;
+                _game.Windows.Open(MailWindow);
+                mail.AcceptEvent();
+            };
+        }
 
         float lift = layout.Find(MidBackground)?.H ?? 0;
         if (layout.Find(BottomBackground) is { } bottom && _view.ControlOf(bottom) is { } bottomControl)
@@ -56,6 +71,7 @@ public partial class StatusHud : Control
         _view.SetText("Text_HP", $"{c.Hp}/{c.MaxHp}");
         _view.SetText("Text_MSP", $"{c.Mp}/{c.MaxMp}");
         _view.SetText("text_level_id", c.Name.Length > 0 ? $"Lv{c.Level} {c.Name}" : "");
+        if (_view.Get(MailIcon) is { } mail) mail.Visible = c.MailUnread > 0;
     }
 
     private static float Fraction(int value, int max) => max > 0 ? Mathf.Clamp(value / (float)max, 0f, 1f) : 0f;

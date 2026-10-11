@@ -12,6 +12,8 @@ public partial class CharacterWindow : Control
     private const int TitleBarHeight = 60;
     private const string ActiveTab = "btn_state";
     private const string FriendsTab = "btn_friends";
+    private const string TitleTab = "btn_title";
+    private const string TitlesWindow = "titles";
 
     private static readonly (string Button, int StatRow)[] StatButtons =
     {
@@ -60,7 +62,8 @@ public partial class CharacterWindow : Control
 
         host.SetDragHandle(_frame.MakeDragHandle(new Rect2(0, 0, _frame.Size.X, TitleBarHeight)));
         _frame.OnPressed("btn_close", host.Close);
-        _frame.Hide("btn_knights", "btn_clan", "btn_force", "btn_title");
+        _frame.Hide("btn_knights", "btn_clan", "btn_force");
+        _frame.OnPressed(TitleTab, () => _game.Windows.Toggle(TitlesWindow));
         var tabs = new ButtonGroup();
         foreach (var (id, friendsShown) in new[] { (ActiveTab, false), (FriendsTab, true) })
             if (_frame.Get<TextureButton>(id) is { } tab)

@@ -17,6 +17,7 @@ public partial class QuestTracker : Control
     private const string PageNumberId = "str_pagenum";
     private const string QuestsWindow = "quests";
     private const float ScreenMargin = 8f;
+    private const float RowGap = 8f;
     private const int ObjectiveFontSize = 11;
     private const float ObjectiveRowHeight = 16f;
     private const float ObjectiveLeft = 23f;
@@ -82,6 +83,7 @@ public partial class QuestTracker : Control
     {
         _game.Quests.Changed += Refresh;
         _game.BecameAvailable += Refresh;
+        _game.Windows.TopRightRowMoved += FollowRow;
         _hudLayout ??= HudLayout.Attach(this, LayoutId, _view.Get(TitleBarId), DefaultPosition);
         Refresh();
     }
@@ -90,13 +92,19 @@ public partial class QuestTracker : Control
     {
         _game.Quests.Changed -= Refresh;
         _game.BecameAvailable -= Refresh;
+        _game.Windows.TopRightRowMoved -= FollowRow;
     }
 
     private Vector2 DefaultPosition()
     {
         var room = GetViewport().GetVisibleRect().Size;
-        return new Vector2(room.X - _layout.W - ScreenMargin, ScreenMargin);
+        float left = room.X - _layout.W - ScreenMargin;
+        var row = _game.Windows.TopRightRow;
+        bool covered = row.HasArea() && row.Position.X < left + _layout.W && row.End.X > left;
+        return new Vector2(left, covered ? Mathf.Max(ScreenMargin, row.End.Y + RowGap) : ScreenMargin);
     }
+
+    private void FollowRow() => _hudLayout?.ReapplyDefault();
 
     private void Turn(int delta)
     {

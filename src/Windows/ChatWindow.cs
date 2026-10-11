@@ -1,6 +1,7 @@
 using Godot;
 using KnightOnlineUi.Layout;
 using LibreKO;
+using LibreKO.Domain;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -27,21 +28,48 @@ public partial class ChatWindow : Control
     private static readonly (string Button, string Prefix)[] ChannelTabs =
     {
         ("btn_normal", ""),
-        ("btn_private", "@"),
         ("btn_shout", "!"),
         ("btn_party_force", "#"),
         ("btn_clan", "$"),
         ("btn_union", "&"),
-        ("btn_chatroom", "|"),
+        ("btn_chatroom", "\\"),
+        ("btn_noah_knights", "|"),
     };
+    private const string NoahButton = "btn_noah_knights";
+    private const string NoahFilterBox = "btn_check_noah_knights";
+    private static readonly string[] ClanChannelButtons = { "btn_clan", "btn_union" };
+    private readonly Dictionary<string, TextureButton> _channels = new();
 
     private const string LayoutId = "theme_chat";
     private const string SettingShade = "chat.shade";
     private const string SettingShadeOn = "chat.shadeOn";
     private const string WhisperButton = "btn_private";
     private const string WhisperPrefix = "@";
+    private const int WhisperButtonTipText = 3031;
     private const string OptionButton = "btn_option";
     private const string SettingShadeIndex = "chat.shadeIndex";
+    private const string SettingHidden = "chat.hidden";
+    private const string SettingLocked = "chat.locked";
+    private const string FilterPanel = "base_filter";
+    private const string FilterButton = "btn_filter";
+    private const string LockButton = "btn_chat_lock";
+    private const string BlockButton = "btn_check_block";
+    private const string UnavailableTip = "Not available";
+    private const ChatCategory AlwaysShown = ChatCategory.Notice | ChatCategory.Commander;
+
+    private static readonly (string Button, ChatCategory Category)[] FilterBoxes =
+    {
+        ("btn_check_normal", ChatCategory.General),
+        ("btn_check_private", ChatCategory.Whisper),
+        ("btn_check_shout", ChatCategory.Shout),
+        ("btn_check_party_force", ChatCategory.Party),
+        ("btn_check_clan", ChatCategory.Clan),
+        ("btn_check_union", ChatCategory.Alliance),
+        ("btn_check_noah_knights", ChatCategory.NoahKnights),
+        ("btn_check_chatroom", ChatCategory.ChatRoom),
+        ("btn_check_userinfo", ChatCategory.System),
+        ("btn_check_shop", ChatCategory.Trade),
+    };
     private static readonly float[] ShadeLevels = { 0.75f, 0.5f, 0.25f, 0f };
     private const float DefaultShade = 0.45f;
 
@@ -74,6 +102,7 @@ public partial class ChatWindow : Control
     private int _shadeIndex;
     private bool _shadeOn;
     private string _prefix = "";
+    private ChatCategory _hidden;
 
     public ChatWindow()
     {
@@ -84,7 +113,7 @@ public partial class ChatWindow : Control
         MouseFilter = MouseFilterEnum.Ignore;
         Size = layout.SizeVec;
         AddChild(_view);
-        _view.Hide("img_edit2", "img_sizechange", "btn_knights", "btn_force", "btn_noah_knights", "btn_check_shop", "base_filter");
+        _view.Hide("img_edit2", "img_sizechange", "btn_knights", "btn_force", NoahButton, FilterPanel);
         _view.Hide(UserRowIds);
         _view.FadeOut(OpaqueBackgroundId);
         foreach (var (_, control) in _view.Where(n => n.Id.StartsWith(UserCheckPrefix)))
@@ -106,6 +135,8 @@ public partial class ChatWindow : Control
         _shadeOn = _settings.GetBool(SettingShadeOn, false);
         ApplyShade();
         _view.OnPressed("btn_Color", () => { _shadeOn = !_shadeOn; ApplyShade(); });
+        _hidden = (ChatCategory)_settings.GetInt(SettingHidden, 0) & ~AlwaysShown;
+        BuildFilterPanel();
         _dragButton = _view.Get(OptionButton);
 
         var textArea = _view.Get(TextArea);
@@ -114,6 +145,7 @@ public partial class ChatWindow : Control
         {
             Position = textArea?.Position ?? Vector2.Zero,
             Size = textArea?.Size ?? new Vector2(342, 111),
+            MouseFilter = MouseFilterEnum.Pass,
         };
         if (textArea != null) textArea.Visible = false;
         (textArea?.GetParent() ?? (Node)_view).AddChild(_log);
@@ -153,13 +185,77 @@ public partial class ChatWindow : Control
             tab.ButtonPressed = prefix.Length == 0;
             string which = prefix;
             tab.Pressed += () => _prefix = which;
-            if (button == WhisperButton) tab.Pressed += StartWhisper;
+            _channels[button] = tab;
+        }
+
+        if (_view.Get<BaseButton>(WhisperButton) is { } whisper)
+        {
+            whisper.TooltipText = ItemData.Text(WhisperButtonTipText,
+                "You can click on the character and press the 'Private Message' button to start a private chat.");
+            whisper.Pressed += StartWhisper;
         }
 
         _baseSize = Size;
         Resized += Relayout;
         Callable.From(CaptureGrow).CallDeferred();
     }
+
+    private void BuildFilterPanel()
+    {
+        _view.OnPressed(FilterButton, () =>
+        {
+            if (_view.Get(FilterPanel) is { } panel) panel.Visible = !panel.Visible;
+        });
+        foreach (var (button, category) in FilterBoxes)
+        {
+            if (_view.Get<TextureButton>(button) is not { } box) continue;
+            box.ToggleMode = true;
+            box.ButtonPressed = (_hidden & category) == 0;
+            var which = category;
+            box.Toggled += shown => SetShown(which, shown);
+        }
+        if (_view.Get<BaseButton>(BlockButton) is { } block)
+        {
+            block.Disabled = true;
+            block.TooltipText = UnavailableTip;
+        }
+        if (_view.Get<TextureButton>(LockButton) is { } lockButton)
+        {
+            lockButton.ToggleMode = true;
+            lockButton.ButtonPressed = _settings.GetBool(SettingLocked, false);
+            lockButton.Toggled += locked =>
+            {
+                _settings.SetBool(SettingLocked, locked);
+                if (_hudLayout != null) _hudLayout.Locked = locked;
+            };
+        }
+    }
+
+    private void SetShown(ChatCategory category, bool shown)
+    {
+        _hidden = shown ? _hidden & ~category : _hidden | category;
+        _settings.SetInt(SettingHidden, (int)_hidden);
+        Reload();
+    }
+
+    private void RefreshChannels()
+    {
+        bool noah = _game.Character.NoahKnight;
+        SetChannelShown(NoahButton, noah);
+        foreach (var button in ClanChannelButtons) SetChannelShown(button, !noah);
+        if (_view.Get<BaseButton>(NoahFilterBox) is { } box) box.Disabled = !noah;
+    }
+
+    private void SetChannelShown(string button, bool shown)
+    {
+        if (!_channels.TryGetValue(button, out var tab)) return;
+        tab.Visible = shown;
+        if (shown || !tab.ButtonPressed) return;
+        _prefix = "";
+        if (_channels.TryGetValue(ChannelTabs[0].Button, out var normal)) normal.ButtonPressed = true;
+    }
+
+    private bool Shown(GameChatLine line) => (line.Category & AlwaysShown) != 0 || (line.Category & _hidden) == 0;
 
     private void CaptureGrow()
     {
@@ -189,20 +285,25 @@ public partial class ChatWindow : Control
 
     public override void _EnterTree()
     {
-        _game.Chat.LineAdded += Append;
+        _game.Chat.LineArrived += Append;
         _game.Chat.InputRequested += FocusInput;
         _game.BecameAvailable += Reload;
+        _game.Character.Changed += RefreshChannels;
+        _game.BecameAvailable += RefreshChannels;
         _hudLayout ??= HudLayout.Attach(this, LayoutId, _dragButton, DefaultPosition, resizable: true,
             defaultSize: _baseSize, minimumSize: _baseSize, resizeCorner: HudLayout.Corner.TopRight,
             backgroundOpacityChanged: _ => CycleShade());
+        _hudLayout.Locked = _settings.GetBool(SettingLocked, false);
         Reload();
     }
 
     public override void _ExitTree()
     {
-        _game.Chat.LineAdded -= Append;
+        _game.Chat.LineArrived -= Append;
         _game.Chat.InputRequested -= FocusInput;
         _game.BecameAvailable -= Reload;
+        _game.Character.Changed -= RefreshChannels;
+        _game.BecameAvailable -= RefreshChannels;
     }
 
     public override void _Input(InputEvent ev)
@@ -232,9 +333,14 @@ public partial class ChatWindow : Control
 
     private void StartWhisper()
     {
-        if (_input == null || !_game.Target.Has || !_game.Target.IsPlayer) return;
+        if (_game.Target.Has && _game.Target.IsPlayer)
+        {
+            _game.Whispers.OpenWith(_game.Target.Name);
+            return;
+        }
+        if (_input == null) return;
         FocusInput();
-        _input.Text = WhisperPrefix + _game.Target.Name + " ";
+        _input.Text = WhisperPrefix;
         _input.CaretColumn = _input.Text.Length;
     }
 
@@ -252,9 +358,12 @@ public partial class ChatWindow : Control
         return new Vector2(ScreenMargin, room.Y - BottomBarHeight - Size.Y - ScreenMargin);
     }
 
-    private void Reload() => _log.Set(_game.Chat.History);
+    private void Reload() => _log.Set(_game.Chat.Lines.Where(Shown).Select(line => line.BbCode));
 
-    private void Append(string bbcode) => _log.Append(bbcode);
+    private void Append(GameChatLine line)
+    {
+        if (Shown(line)) _log.Append(line.BbCode);
+    }
 
     private void FocusInput()
     {

@@ -38,6 +38,12 @@ public partial class LogText : Control
         _label.Resized += Relayout;
     }
 
+    public void EnableLinks(System.Action<string> clicked)
+    {
+        _label.MouseFilter = MouseFilterEnum.Pass;
+        _label.MetaClicked += meta => clicked(meta.AsString());
+    }
+
     public void Set(IEnumerable<string> lines)
     {
         _lines.Clear();

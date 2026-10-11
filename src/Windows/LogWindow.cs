@@ -40,12 +40,19 @@ public partial class LogWindow : Control
     private readonly Vector2 _baseSize;
     private readonly LayoutNode _layoutRoot;
     private VerticalGrow? _grow;
+    private HorizontalGrow? _widen;
     private bool _relaying;
     private HudLayout? _hudLayout;
 
     private static readonly HashSet<string> StretchIds = new() { "base_msgwnd", "img_background", "img_background2", "scroll", "scroll_bar", "img_scrollback", "text_message", "base_area" };
 
     private static readonly HashSet<string> ShiftIds = new() { "btn_msgwnd_lock", "btn_item", "btn_state", "btn_system", "btn_all", "text_version", "btn_option" };
+
+    private static readonly HashSet<string> WidenIds = new() { "base_msgwnd", "img_background", "img_background2", "text_message", "base_area" };
+
+    private static readonly HashSet<string> RightIds = new() { "scroll", "btn_msgwnd_lock", "btn_option" };
+
+    private static readonly Vector2 MaximumScreenShare = new(0.3f, 0.7f);
     private int _shadeIndex;
     private GameLogKind? _filter;
 
@@ -121,6 +128,16 @@ public partial class LogWindow : Control
         foreach (var parent in grow.Stretched.Where(c => c != _shade && c != _log))
             grow.ShiftBottomBand(parent);
         _grow = grow;
+
+        var widen = new HorizontalGrow();
+        widen.Add(_view, HorizontalGrow.Mode.Stretch);
+        foreach (var (node, control) in _view.Where(_ => true))
+            widen.Add(control, WidenIds.Contains(node.Id) ? HorizontalGrow.Mode.Stretch
+                : RightIds.Contains(node.Id) ? HorizontalGrow.Mode.Shift
+                : HorizontalGrow.Mode.Stay);
+        widen.Add(_shade, HorizontalGrow.Mode.Stretch);
+        widen.Add(_log, HorizontalGrow.Mode.Stretch);
+        _widen = widen;
         Relayout();
     }
 
@@ -128,8 +145,8 @@ public partial class LogWindow : Control
     {
         if (_grow == null || _relaying) return;
         _relaying = true;
-        if (!Mathf.IsEqualApprox(Size.X, _baseSize.X)) Size = new Vector2(_baseSize.X, Size.Y);
         _grow.Apply(Mathf.Max(0f, Size.Y - _baseSize.Y));
+        _widen?.Apply(Mathf.Max(0f, Size.X - _baseSize.X));
         _relaying = false;
     }
 
@@ -140,6 +157,7 @@ public partial class LogWindow : Control
         _hudLayout ??= HudLayout.Attach(this, LayoutId, _dragButton, DefaultPosition, resizable: true,
             defaultSize: _baseSize, minimumSize: _baseSize, resizeCorner: HudLayout.Corner.TopLeft,
             backgroundOpacityChanged: _ => CycleShade());
+        _hudLayout.MaximumViewportShare = MaximumScreenShare;
         Reload();
     }
 

@@ -31,23 +31,87 @@ public partial class TargetFrame : Control
     private readonly LayoutView _view;
     private readonly PluginGame _game;
     private readonly Label _hpText;
+    private const string DropRow = "base_EventDropList";
+    private const string DropRowSuffix = "_";
+    private const int DropRowStep = 25;
+    private const int DropRows = 3;
+    private const int DropTextSize = 11;
+    private readonly LayoutNode?[] _dropRows = new LayoutNode?[DropRows];
+    private readonly TextureRect?[] _dropIcons = new TextureRect?[DropRows];
+    private readonly Label?[] _dropLines = new Label?[DropRows];
 
     public TargetFrame()
     {
         var kit = Plugin.Kit;
         _game = kit.Game;
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
+        var layout = kit.Layout(LayoutName);
+        for (int i = 1; i < DropRows; i++)
+            if (layout.Find(DropRow + DropRowSuffix + i) == null)
+                layout.CloneBelow(DropRow, DropRowSuffix + i, DropRowStep * i);
+        _view = new LayoutView(kit, layout);
         Size = _view.Size;
         MouseFilter = MouseFilterEnum.Ignore;
         AddChild(_view);
         foreach (var (node, control) in _view.Where(n => n.Id.StartsWith("frame_") && n.Id != FrameShown))
             control.Visible = false;
-        _view.Hide("base_mon_hp_level_long", "base_cover", "base_EventDropList", "Button_Board");
+        _view.Hide("base_mon_hp_level_long", "base_cover", "Button_Board");
+        BuildDropRows(layout);
         foreach (var (node, control) in _view.Where(n => n.Id.StartsWith("grpg_level_") && n.Id != HpBar))
             control.Visible = false;
         _hpText = BuildHpText();
         ShowState(-1);
         Visible = false;
+    }
+
+    private void BuildDropRows(LayoutNode layout)
+    {
+        for (int i = 0; i < DropRows; i++)
+        {
+            string suffix = i == 0 ? "" : DropRowSuffix + i;
+            if (layout.Find(DropRow + suffix) is not { } row) continue;
+            _dropRows[i] = row;
+            if (_view.Get(row, "icon" + suffix) is { } iconArea)
+            {
+                var icon = new TextureRect
+                {
+                    Size = iconArea.Size,
+                    ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
+                    StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
+                    MouseFilter = MouseFilterEnum.Ignore,
+                };
+                iconArea.AddChild(icon);
+                _dropIcons[i] = icon;
+            }
+            if (_view.Get(row, "name" + suffix) is { } nameArea)
+            {
+                var line = new Label
+                {
+                    Size = nameArea.Size,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    ClipText = true,
+                    MouseFilter = MouseFilterEnum.Ignore,
+                };
+                line.AddThemeFontSizeOverride("font_size", DropTextSize);
+                line.AddThemeColorOverride("font_color", Colors.White);
+                line.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
+                line.AddThemeConstantOverride("outline_size", HpTextOutline);
+                nameArea.AddChild(line);
+                _dropLines[i] = line;
+            }
+            if (_view.ControlOf(row) is { } frame) frame.Visible = false;
+        }
+    }
+
+    private void ShowDropRows(IReadOnlyList<GameTargetDrop> drops)
+    {
+        for (int i = 0; i < DropRows; i++)
+        {
+            bool used = i < drops.Count;
+            if (_dropRows[i] is { } row && _view.ControlOf(row) is { } frame) frame.Visible = used;
+            if (!used) continue;
+            if (_dropIcons[i] is { } icon) icon.Texture = drops[i].Icon;
+            if (_dropLines[i] is { } line) line.Text = drops[i].Line;
+        }
     }
 
     private Label BuildHpText()
@@ -112,5 +176,6 @@ public partial class TargetFrame : Control
         ShowState(state);
         _view.SetProgress(state < 0 ? HpBar : StateBarPrefix + state, fraction);
         _hpText.Text = t.MaxHp > 0 ? $"{t.Hp} / {t.MaxHp}" : "";
+        ShowDropRows(t.QuestDrops);
     }
 }

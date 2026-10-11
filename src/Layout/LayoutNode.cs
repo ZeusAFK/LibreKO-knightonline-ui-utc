@@ -99,8 +99,8 @@ public sealed class LayoutNode
         copy.Y += dy;
         copy.DragY += dy;
         copy.ClickY += dy;
-        copy._children.Clear();
-        foreach (var child in Children) copy._children.Add(child.Copy(idSuffix, dy));
+        copy._children = new List<LayoutNode>(_children.Count);
+        foreach (var child in _children) copy._children.Add(child.Copy(idSuffix, dy));
         return copy;
     }
 
