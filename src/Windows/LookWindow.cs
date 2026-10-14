@@ -52,31 +52,31 @@ public partial class LookWindow : Control
         ("str_cur_race", "str_cur_class"), ("str_change0_race", "str_change0_class"), ("str_change1_race", "str_change1_class"),
     };
 
-    private readonly LookLayout _layout;
-    private readonly IGameAppearance _look;
-    private readonly LayoutView _view;
-    private readonly TextureRect? _preview;
+    private readonly LookLayout layout;
+    private readonly IGameAppearance look;
+    private readonly LayoutView view;
+    private readonly TextureRect? preview;
 
     public LookWindow(WindowHost host, LookLayout layout, IGameAppearance look)
     {
-        _layout = layout;
-        _look = look;
+        this.layout = layout;
+        this.look = look;
         var kit = Plugin.Kit;
-        _view = new LayoutView(kit, kit.Layout(layout.Name));
+        view = new LayoutView(kit, kit.Layout(layout.Name));
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, layout.TitleBarHeight)));
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, layout.TitleBarHeight)));
 
-        if (_view.Get(layout.PreviewArea) is { } area)
+        if (view.Get(layout.PreviewArea) is { } area)
         {
-            _preview = new TextureRect
+            preview = new TextureRect
             {
                 Size = area.Size,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
                 MouseFilter = MouseFilterEnum.Ignore,
             };
-            area.AddChild(_preview);
+            area.AddChild(preview);
         }
 
         Step(layout.RacePrev, AppearancePart.Race, -1);
@@ -85,22 +85,22 @@ public partial class LookWindow : Control
         Step(layout.FaceNext, AppearancePart.Face, 1);
         Step(layout.HairPrev, AppearancePart.Hair, -1);
         Step(layout.HairNext, AppearancePart.Hair, 1);
-        _view.OnPressed(LeftTurn, () => _look.Turn(-TurnDegrees));
-        _view.OnPressed(RightTurn, () => _look.Turn(TurnDegrees));
-        _view.OnPressed(Zoom, _look.ToggleZoom);
-        _view.OnPressed(HairColour, _look.OpenHairColour);
-        _view.OnPressed(layout.Ok, _look.Confirm);
-        _view.OnPressed(layout.Cancel, _look.Cancel);
-        if (layout.Close != null) _view.OnPressed(layout.Close, _look.Cancel);
+        view.OnPressed(LeftTurn, () => this.look.Turn(-TurnDegrees));
+        view.OnPressed(RightTurn, () => this.look.Turn(TurnDegrees));
+        view.OnPressed(Zoom, this.look.ToggleZoom);
+        view.OnPressed(HairColour, this.look.OpenHairColour);
+        view.OnPressed(layout.Ok, this.look.Confirm);
+        view.OnPressed(layout.Cancel, this.look.Cancel);
+        if (layout.Close != null) view.OnPressed(layout.Close, this.look.Cancel);
         if (layout.CaptionHairColour)
-            _view.Recaption(HairColour, ItemData.Text(HairColourText, "Change hair color"), CaptionSize, CaptionColour);
-        else if (_view.Get(HairColour) is { } colourButton)
+            view.Recaption(HairColour, ItemData.Text(HairColourText, "Change hair color"), CaptionSize, CaptionColour);
+        else if (view.Get(HairColour) is { } colourButton)
             colourButton.TooltipText = ItemData.Text(HairColourText, "Change hair color");
-        foreach (var (id, text) in layout.Labels) _view.SetText(id, text);
-        _view.Recaption(layout.Ok, ConfirmCaption, CaptionSize, CaptionColour);
-        _view.Recaption(layout.Cancel, CancelCaption, CaptionSize, CaptionColour);
+        foreach (var (id, text) in layout.Labels) view.SetText(id, text);
+        view.Recaption(layout.Ok, ConfirmCaption, CaptionSize, CaptionColour);
+        view.Recaption(layout.Cancel, CancelCaption, CaptionSize, CaptionColour);
         for (int i = 0; i < GenderInfoTexts.Length; i++)
-            if (_view.Get<Label>(GenderInfoTexts[i]) is { } info)
+            if (view.Get<Label>(GenderInfoTexts[i]) is { } info)
             {
                 info.AutowrapMode = TextServer.AutowrapMode.WordSmart;
                 info.Text = ItemData.Text(GenderInfoTextIds[i], "");
@@ -109,32 +109,32 @@ public partial class LookWindow : Control
 
     private void Step(string? button, AppearancePart part, int delta)
     {
-        if (button != null) _view.OnPressed(button, () => _look.Step(part, delta));
+        if (button != null) view.OnPressed(button, () => look.Step(part, delta));
     }
 
     public override void _EnterTree()
     {
-        _look.Changed += Refresh;
+        look.Changed += Refresh;
         Refresh();
     }
 
-    public override void _ExitTree() => _look.Changed -= Refresh;
+    public override void _ExitTree() => look.Changed -= Refresh;
 
     private void Refresh()
     {
-        if (_preview != null) _preview.Texture = _look.Preview;
-        if (_layout.RaceLabel != null) _view.SetText(_layout.RaceLabel, _look.RaceName);
-        _view.SetText(_layout.FaceLabel, $"Face {_look.Face + 1}");
-        _view.SetText(_layout.HairLabel, $"Hair {_look.HairStyle + 1}");
-        if (_layout.NameLabel != null) _view.SetText(_layout.NameLabel, _look.CharacterName);
-        if (_view.Get<BaseButton>(_layout.Ok) is { } ok) ok.Disabled = _look.Busy;
-        var choices = _look.RaceChoices.OrderByDescending(c => c.Current).ToList();
+        if (preview != null) preview.Texture = look.Preview;
+        if (layout.RaceLabel != null) view.SetText(layout.RaceLabel, look.RaceName);
+        view.SetText(layout.FaceLabel, $"Face {look.Face + 1}");
+        view.SetText(layout.HairLabel, $"Hair {look.HairStyle + 1}");
+        if (layout.NameLabel != null) view.SetText(layout.NameLabel, look.CharacterName);
+        if (view.Get<BaseButton>(layout.Ok) is { } ok) ok.Disabled = look.Busy;
+        var choices = look.RaceChoices.OrderByDescending(c => c.Current).ToList();
         for (int i = 0; i < ChoiceRows.Length; i++)
         {
             var (race, cls) = ChoiceRows[i];
             var choice = i < choices.Count ? choices[i] : default;
-            _view.SetText(race, choice.Race ?? "");
-            _view.SetText(cls, choice.Class ?? "");
+            view.SetText(race, choice.Race ?? "");
+            view.SetText(cls, choice.Class ?? "");
         }
     }
 }

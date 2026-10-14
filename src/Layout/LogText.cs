@@ -8,15 +8,15 @@ public partial class LogText : Control
     private const float WheelStep = 24f;
     private static readonly Color ShadowColor = new(0, 0, 0, 0.75f);
 
-    private readonly RichTextLabel _label;
-    private readonly Queue<string> _lines = new();
-    private float _scroll;
+    private readonly RichTextLabel label;
+    private readonly Queue<string> lines = new();
+    private float scroll;
 
     public LogText(int fontSize, Color color, Font font)
     {
         MouseFilter = MouseFilterEnum.Ignore;
         ClipContents = true;
-        _label = new RichTextLabel
+        label = new RichTextLabel
         {
             BbcodeEnabled = true,
             FitContent = true,
@@ -24,57 +24,57 @@ public partial class LogText : Control
             AutowrapMode = TextServer.AutowrapMode.WordSmart,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _label.AddThemeFontOverride("normal_font", font);
-        _label.AddThemeFontSizeOverride("normal_font_size", fontSize);
-        _label.AddThemeFontSizeOverride("bold_font_size", fontSize);
-        _label.AddThemeColorOverride("default_color", color);
-        _label.AddThemeColorOverride("font_shadow_color", ShadowColor);
-        _label.AddThemeConstantOverride("shadow_offset_x", 1);
-        _label.AddThemeConstantOverride("shadow_offset_y", 1);
+        label.AddThemeFontOverride("normal_font", font);
+        label.AddThemeFontSizeOverride("normal_font_size", fontSize);
+        label.AddThemeFontSizeOverride("bold_font_size", fontSize);
+        label.AddThemeColorOverride("default_color", color);
+        label.AddThemeColorOverride("font_shadow_color", ShadowColor);
+        label.AddThemeConstantOverride("shadow_offset_x", 1);
+        label.AddThemeConstantOverride("shadow_offset_y", 1);
         foreach (var state in new[] { "normal", "focus" })
-            _label.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
-        AddChild(_label);
+            label.AddThemeStyleboxOverride(state, new StyleBoxEmpty());
+        AddChild(label);
         Resized += Relayout;
-        _label.Resized += Relayout;
+        label.Resized += Relayout;
     }
 
     public void EnableLinks(System.Action<string> clicked)
     {
-        _label.MouseFilter = MouseFilterEnum.Pass;
-        _label.MetaClicked += meta => clicked(meta.AsString());
+        label.MouseFilter = MouseFilterEnum.Pass;
+        label.MetaClicked += meta => clicked(meta.AsString());
     }
 
     public void Set(IEnumerable<string> lines)
     {
-        _lines.Clear();
-        foreach (var line in lines) _lines.Enqueue(line);
+        this.lines.Clear();
+        foreach (var line in lines) this.lines.Enqueue(line);
         Trim();
         Apply();
     }
 
     public void Append(string bbcode)
     {
-        _lines.Enqueue(bbcode);
+        lines.Enqueue(bbcode);
         bool rebuild = false;
-        while (_lines.Count > MaxLines)
+        while (lines.Count > MaxLines)
         {
-            string dropped = _lines.Dequeue();
+            string dropped = lines.Dequeue();
             for (int n = dropped.Split('\n').Length; n > 0 && !rebuild; n--)
-                rebuild = !_label.RemoveParagraph(0, true);
+                rebuild = !label.RemoveParagraph(0, true);
         }
-        _scroll = 0f;
-        if (rebuild) _label.Text = string.Join("\n", _lines);
+        scroll = 0f;
+        if (rebuild) label.Text = string.Join("\n", lines);
         else
         {
-            if (_lines.Count > 1) _label.AppendText("\n");
-            _label.AppendText(bbcode);
+            if (lines.Count > 1) label.AppendText("\n");
+            label.AppendText(bbcode);
         }
         Relayout();
     }
 
     public void Scroll(float pixels)
     {
-        _scroll += pixels;
+        scroll += pixels;
         Relayout();
     }
 
@@ -87,22 +87,22 @@ public partial class LogText : Control
 
     private void Trim()
     {
-        while (_lines.Count > MaxLines) _lines.Dequeue();
+        while (lines.Count > MaxLines) lines.Dequeue();
     }
 
     private void Apply()
     {
-        _scroll = 0f;
-        _label.Text = string.Join("\n", _lines);
+        scroll = 0f;
+        label.Text = string.Join("\n", lines);
         Relayout();
     }
 
     private void Relayout()
     {
-        _label.CustomMinimumSize = new Vector2(Size.X, 0);
-        _label.Size = new Vector2(Size.X, 0);
-        float overflow = Mathf.Max(0f, _label.Size.Y - Size.Y);
-        _scroll = Mathf.Clamp(_scroll, 0f, overflow);
-        _label.Position = new Vector2(0, Size.Y - _label.Size.Y + _scroll);
+        label.CustomMinimumSize = new Vector2(Size.X, 0);
+        label.Size = new Vector2(Size.X, 0);
+        float overflow = Mathf.Max(0f, label.Size.Y - Size.Y);
+        scroll = Mathf.Clamp(scroll, 0f, overflow);
+        label.Position = new Vector2(0, Size.Y - label.Size.Y + scroll);
     }
 }

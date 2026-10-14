@@ -40,52 +40,52 @@ public partial class PartyHud : Control
         [PartyHpLook.Slow] = "prg_party_green.png",
         [PartyHpLook.Undead] = "prg_party_gray.png",
     };
-    private readonly TextureRect?[] _classIcons = new TextureRect?[MaxRows];
+    private readonly TextureRect?[] classIcons = new TextureRect?[MaxRows];
     private const string MeterToggle = "btn_metertoggle";
     private const string RejoinBox = "auto_rejoin";
     private const string VoteGroup = "group_uservote";
     private static readonly string[] LeaderGroups = { "group_chief", "group_out", "group_commander" };
-    private readonly float[] _menuTops = new float[LeaderGroups.Length + 1];
+    private readonly float[] menuTops = new float[LeaderGroups.Length + 1];
     private const string MeterBoard = "btn_metertotal";
     private static readonly string[] MeterTips = { "Party meter: off", "Party meter: damage dealt", "Party meter: healing" };
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly LayoutNode[] _rows = new LayoutNode[MaxRows];
-    private readonly int[] _rowMember = new int[MaxRows];
-    private readonly Control _drag;
-    private int _menuMember = -1;
-    private HudLayout? _hudLayout;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly LayoutNode[] rows = new LayoutNode[MaxRows];
+    private readonly int[] rowMember = new int[MaxRows];
+    private readonly Control drag;
+    private int menuMember = -1;
+    private HudLayout? hudLayout;
 
     public PartyHud()
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout) { Position = new Vector2(-PanelLeft, 0) };
+        view = new LayoutView(kit, layout) { Position = new Vector2(-PanelLeft, 0) };
         MouseFilter = MouseFilterEnum.Ignore;
         Size = new Vector2(MenuRight - PanelLeft, TitleBarHeight);
-        _drag = new Control
+        drag = new Control
         {
             MouseFilter = MouseFilterEnum.Stop,
             Size = new Vector2(PanelRight - PanelLeft, TitleBarHeight),
         };
-        AddChild(_drag);
-        AddChild(_view);
-        _view.Hide(HiddenIds);
-        foreach (var (node, control) in _view.Where(n => n.IsString && n.Text == "Friends Voice"))
+        AddChild(drag);
+        AddChild(view);
+        view.Hide(HiddenIds);
+        foreach (var (node, control) in view.Where(n => n.IsString && n.Text == "Friends Voice"))
             control.Visible = false;
 
         for (int i = 0; i < MaxRows; i++)
         {
-            _rowMember[i] = -1;
+            rowMember[i] = -1;
             if (layout.Find(RowPrefix + i) is not { } row) continue;
-            _rows[i] = row;
-            _view.Hide(row, RowHiddenIds);
+            rows[i] = row;
+            view.Hide(row, RowHiddenIds);
             int arrowSlot = i;
-            _view.OnPressed(row, "btn_up", () => MoveRow(arrowSlot, PartyOrder.Up));
-            _view.OnPressed(row, "btn_down", () => MoveRow(arrowSlot, PartyOrder.Down));
-            if (_view.Get(row, ClassArea) is { } area)
+            view.OnPressed(row, "btn_up", () => MoveRow(arrowSlot, PartyOrder.Up));
+            view.OnPressed(row, "btn_down", () => MoveRow(arrowSlot, PartyOrder.Down));
+            if (view.Get(row, ClassArea) is { } area)
             {
                 var icon = new TextureRect
                 {
@@ -95,9 +95,9 @@ public partial class PartyHud : Control
                     MouseFilter = MouseFilterEnum.Ignore,
                 };
                 area.AddChild(icon);
-                _classIcons[i] = icon;
+                classIcons[i] = icon;
             }
-            if (_view.ControlOf(row) is { } frame)
+            if (view.ControlOf(row) is { } frame)
             {
                 int slot = i;
                 frame.MouseFilter = MouseFilterEnum.Stop;
@@ -105,105 +105,105 @@ public partial class PartyHud : Control
             }
         }
 
-        _view.OnPressed("btn_chief", () => RunMenu(_game.Party.MakeLeader));
-        _view.OnPressed("btn_out", () => RunMenu(_game.Party.Kick));
-        _view.OnPressed("btn_commander", () => RunMenu(_game.Party.MakeCommander));
-        _view.OnPressed("btn_uservote", () => RunMenu(_game.Party.UserVote));
-        for (int i = 0; i < _menuTops.Length; i++)
-            _menuTops[i] = _view.Get(i < LeaderGroups.Length ? LeaderGroups[i] : VoteGroup)?.Position.Y ?? 0f;
-        _view.OnPressed(CommanderZoom, () => _game.Party.ShowCommanderBar());
-        _view.OnPressed(MeterToggle, () => _game.Party.CycleRowMeter());
-        if (_view.Get<TextureButton>(RejoinBox) is { } rejoin)
+        view.OnPressed("btn_chief", () => RunMenu(game.Party.MakeLeader));
+        view.OnPressed("btn_out", () => RunMenu(game.Party.Kick));
+        view.OnPressed("btn_commander", () => RunMenu(game.Party.MakeCommander));
+        view.OnPressed("btn_uservote", () => RunMenu(game.Party.UserVote));
+        for (int i = 0; i < menuTops.Length; i++)
+            menuTops[i] = view.Get(i < LeaderGroups.Length ? LeaderGroups[i] : VoteGroup)?.Position.Y ?? 0f;
+        view.OnPressed(CommanderZoom, () => game.Party.ShowCommanderBar());
+        view.OnPressed(MeterToggle, () => game.Party.CycleRowMeter());
+        if (view.Get<TextureButton>(RejoinBox) is { } rejoin)
         {
             rejoin.ToggleMode = true;
-            rejoin.Toggled += _ => _game.Party.ToggleAutoRejoin();
+            rejoin.Toggled += _ => game.Party.ToggleAutoRejoin();
         }
-        _view.OnPressed(MeterBoard, () => _game.Party.ToggleWarBoard());
-        if (_view.Get(MeterBoard) is { } board) board.TooltipText = "Party War Board";
-        _view.OnPressed("btn_party", () => _game.Party.Leave());
-        if (_view.Get("btn_party") is { } leave) leave.TooltipText = "Leave the party";
+        view.OnPressed(MeterBoard, () => game.Party.ToggleWarBoard());
+        if (view.Get(MeterBoard) is { } board) board.TooltipText = "Party War Board";
+        view.OnPressed("btn_party", () => game.Party.Leave());
+        if (view.Get("btn_party") is { } leave) leave.TooltipText = "Leave the party";
     }
 
     public override void _EnterTree()
     {
-        _game.Party.Changed += Refresh;
-        _hudLayout ??= HudLayout.Attach(this, LayoutId, _drag, () => new Vector2(HudAnchor.Edge, DefaultTop));
+        game.Party.Changed += Refresh;
+        hudLayout ??= HudLayout.Attach(this, LayoutId, drag, () => new Vector2(HudAnchor.Edge, DefaultTop));
         Refresh();
     }
 
-    public override void _ExitTree() => _game.Party.Changed -= Refresh;
+    public override void _ExitTree() => game.Party.Changed -= Refresh;
 
     private void Refresh()
     {
-        bool shown = _game.Party.InParty;
+        bool shown = game.Party.InParty;
         Visible = shown;
         if (!shown) { ShowMenu(-1); return; }
-        if (_view.Get(CommanderZoom) is { } zoom) zoom.Visible = _game.Party.CommanderBarHidden;
-        if (_view.Get<TextureButton>(RejoinBox) is { } rejoin)
+        if (view.Get(CommanderZoom) is { } zoom) zoom.Visible = game.Party.CommanderBarHidden;
+        if (view.Get<TextureButton>(RejoinBox) is { } rejoin)
         {
-            rejoin.SetPressedNoSignal(_game.Party.AutoRejoin);
-            rejoin.TooltipText = _game.Party.AutoRejoinTip;
+            rejoin.SetPressedNoSignal(game.Party.AutoRejoin);
+            rejoin.TooltipText = game.Party.AutoRejoinTip;
         }
-        byte meterMode = _game.Party.RowMeterMode;
+        byte meterMode = game.Party.RowMeterMode;
         bool meterOn = meterMode != PartyWarBoard.ModeOff;
-        if (_view.Get(MeterToggle) is { } toggle && meterMode < MeterTips.Length) toggle.TooltipText = MeterTips[meterMode];
-        var members = _game.Party.Members;
+        if (view.Get(MeterToggle) is { } toggle && meterMode < MeterTips.Length) toggle.TooltipText = MeterTips[meterMode];
+        var members = game.Party.Members;
         int bottom = TitleBarHeight;
         for (int i = 0; i < MaxRows; i++)
         {
-            var row = _rows[i];
+            var row = rows[i];
             if (row == null) continue;
             bool used = i < members.Count;
-            if (_view.ControlOf(row) is { } frame) frame.Visible = used;
-            _rowMember[i] = used ? members[i].Id : -1;
+            if (view.ControlOf(row) is { } frame) frame.Visible = used;
+            rowMember[i] = used ? members[i].Id : -1;
             if (!used) continue;
             var m = members[i];
             bottom = Mathf.Max(bottom, row.Y + row.H);
-            if (_view.Get<Label>(row, "str_name") is { } name)
+            if (view.Get<Label>(row, "str_name") is { } name)
             {
                 name.Text = m.Name;
                 name.AddThemeColorOverride("font_color", m.NameColour);
             }
-            if (_view.ControlOf(row) is { } rowControl) rowControl.TooltipText = m.Tooltip;
+            if (view.ControlOf(row) is { } rowControl) rowControl.TooltipText = m.Tooltip;
             SetBar(row, "progress_hp", m.MaxHp > 0 ? (float)m.Hp / m.MaxHp : 0f, null);
-            if (_view.Get<TextureProgressBar>(row, "progress_hp") is { } hp && Plugin.Kit.Texture(HpTextures[m.HpLook]) is { } hpTexture)
+            if (view.Get<TextureProgressBar>(row, "progress_hp") is { } hp && Plugin.Kit.Texture(HpTextures[m.HpLook]) is { } hpTexture)
                 hp.TextureProgress = hpTexture;
-            if (_classIcons[i] is { } classIcon)
+            if (classIcons[i] is { } classIcon)
                 classIcon.Texture = Plugin.Kit.Texture(string.Format(ClassIconFormat, LibreKO.Domain.PartyHud.ClassIconIndex(m.Class)));
             SetBar(row, "progress_mp", m.MaxMp > 0 ? (float)m.Mp / m.MaxMp : 0f, null);
-            if (_view.Get(row, "base_choice") is { } choice) choice.Visible = m.Picked;
-            if (_view.Get(row, "bg_normal") is { } normal) normal.Visible = !meterOn;
-            if (_view.Get(row, "bg_small") is { } small) small.Visible = meterOn;
-            if (_view.Get(row, "meterbar") is { } meter) meter.Visible = meterOn;
-            if (meterOn) SetBar(row, "progress_meter", PartyWarBoard.Fill(Math.Max(0, _game.Party.RowMeterShare(m.Id))), null);
+            if (view.Get(row, "base_choice") is { } choice) choice.Visible = m.Picked;
+            if (view.Get(row, "bg_normal") is { } normal) normal.Visible = !meterOn;
+            if (view.Get(row, "bg_small") is { } small) small.Visible = meterOn;
+            if (view.Get(row, "meterbar") is { } meter) meter.Visible = meterOn;
+            if (meterOn) SetBar(row, "progress_meter", PartyWarBoard.Fill(Math.Max(0, game.Party.RowMeterShare(m.Id))), null);
         }
         Size = new Vector2(MenuRight - PanelLeft, bottom);
-        if (_menuMember >= 0 && !_game.Party.IsLeader) ShowMenu(-1);
+        if (menuMember >= 0 && !game.Party.IsLeader) ShowMenu(-1);
     }
 
     private void MoveRow(int slot, int step)
     {
-        if (_rowMember[slot] >= 0) _game.Party.MoveRow(_rowMember[slot], step);
+        if (rowMember[slot] >= 0) game.Party.MoveRow(rowMember[slot], step);
     }
 
     private void SetBar(LayoutNode row, string id, float fraction, Color? tint)
     {
-        if (_view.Get(row, id) is not TextureProgressBar bar) return;
+        if (view.Get(row, id) is not TextureProgressBar bar) return;
         bar.Value = Mathf.Clamp(fraction, 0f, 1f) * bar.MaxValue;
         if (tint is { } colour) bar.SelfModulate = colour.Lightened(0.35f);
     }
 
     private void OnRowInput(int slot, InputEvent ev)
     {
-        if (ev is not InputEventMouseButton { Pressed: true } click || _rowMember[slot] < 0) return;
-        int member = _rowMember[slot];
+        if (ev is not InputEventMouseButton { Pressed: true } click || rowMember[slot] < 0) return;
+        int member = rowMember[slot];
         if (click.ButtonIndex == MouseButton.Left)
         {
             ShowMenu(-1);
-            _game.Party.Pick(member);
+            game.Party.Pick(member);
             AcceptEvent();
         }
-        else if (click.ButtonIndex == MouseButton.Right && (_game.Party.IsLeader || _game.Party.UserVoteHere))
+        else if (click.ButtonIndex == MouseButton.Right && (game.Party.IsLeader || game.Party.UserVoteHere))
         {
             ShowMenu(member);
             AcceptEvent();
@@ -212,27 +212,27 @@ public partial class PartyHud : Control
 
     private void ShowMenu(int member)
     {
-        _menuMember = member;
-        if (_view.Get(MenuGroup) is { } menu) menu.Visible = member >= 0;
+        menuMember = member;
+        if (view.Get(MenuGroup) is { } menu) menu.Visible = member >= 0;
         if (member < 0) return;
         int slot = 0;
         foreach (var id in LeaderGroups)
-            Stack(id, _game.Party.IsLeader, ref slot);
-        Stack(VoteGroup, _game.Party.UserVoteHere, ref slot);
+            Stack(id, game.Party.IsLeader, ref slot);
+        Stack(VoteGroup, game.Party.UserVoteHere, ref slot);
     }
 
     private void Stack(string id, bool shown, ref int slot)
     {
-        if (_view.Get(id) is not { } group) return;
+        if (view.Get(id) is not { } group) return;
         group.Visible = shown;
         if (!shown) return;
-        group.Position = group.Position with { Y = _menuTops[slot] };
+        group.Position = group.Position with { Y = menuTops[slot] };
         slot++;
     }
 
     private void RunMenu(System.Action<int> action)
     {
-        int member = _menuMember;
+        int member = menuMember;
         ShowMenu(-1);
         if (member >= 0) action(member);
     }

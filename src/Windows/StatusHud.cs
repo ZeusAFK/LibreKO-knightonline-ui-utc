@@ -17,61 +17,61 @@ public partial class StatusHud : Control
     private const string MailWindow = "mail";
     private const int MailTipText = 10803;
 
-    private readonly LayoutView _view;
-    private readonly PluginGame _game;
+    private readonly LayoutView view;
+    private readonly PluginGame game;
 
     public StatusHud()
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout);
+        view = new LayoutView(kit, layout);
         Position = ScreenPosition;
-        Size = _view.Size;
+        Size = view.Size;
         MouseFilter = MouseFilterEnum.Ignore;
-        AddChild(_view);
-        _view.Hide("progress_HP_slow", "progress_HP_drop", "progress_HP_undead", "progress_HP_lasting", "progress_VP",
+        AddChild(view);
+        view.Hide("progress_HP_slow", "progress_HP_drop", "progress_HP_undead", "progress_HP_lasting", "progress_VP",
             MailIcon, "img_Reporter", "img_mail_normal", MidBackground, LocationText);
-        if (_view.Get(MailIcon) is { } mail)
+        if (view.Get(MailIcon) is { } mail)
         {
             mail.MouseFilter = MouseFilterEnum.Stop;
             mail.TooltipText = ItemData.Text(MailTipText, "You can view the mail box by clicking the button.");
             mail.GuiInput += ev =>
             {
                 if (ev is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }) return;
-                _game.Windows.Open(MailWindow);
+                game.Windows.Open(MailWindow);
                 mail.AcceptEvent();
             };
         }
 
         float lift = layout.Find(MidBackground)?.H ?? 0;
-        if (layout.Find(BottomBackground) is { } bottom && _view.ControlOf(bottom) is { } bottomControl)
+        if (layout.Find(BottomBackground) is { } bottom && view.ControlOf(bottom) is { } bottomControl)
             bottomControl.Position -= new Vector2(0, lift);
         Refresh();
     }
 
     public override void _EnterTree()
     {
-        _game.Character.Changed += Refresh;
-        _game.BecameAvailable += Refresh;
+        game.Character.Changed += Refresh;
+        game.BecameAvailable += Refresh;
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        _game.Character.Changed -= Refresh;
-        _game.BecameAvailable -= Refresh;
+        game.Character.Changed -= Refresh;
+        game.BecameAvailable -= Refresh;
     }
 
     private void Refresh()
     {
-        var c = _game.Character;
-        _view.SetProgress("progress_HP", Fraction(c.Hp, c.MaxHp));
-        _view.SetProgress("Progress_msp", Fraction(c.Mp, c.MaxMp));
-        _view.SetText("Text_HP", $"{c.Hp}/{c.MaxHp}");
-        _view.SetText("Text_MSP", $"{c.Mp}/{c.MaxMp}");
-        _view.SetText("text_level_id", c.Name.Length > 0 ? $"Lv{c.Level} {c.Name}" : "");
-        if (_view.Get(MailIcon) is { } mail) mail.Visible = c.MailUnread > 0;
+        var c = game.Character;
+        view.SetProgress("progress_HP", Fraction(c.Hp, c.MaxHp));
+        view.SetProgress("Progress_msp", Fraction(c.Mp, c.MaxMp));
+        view.SetText("Text_HP", $"{c.Hp}/{c.MaxHp}");
+        view.SetText("Text_MSP", $"{c.Mp}/{c.MaxMp}");
+        view.SetText("text_level_id", c.Name.Length > 0 ? $"Lv{c.Level} {c.Name}" : "");
+        if (view.Get(MailIcon) is { } mail) mail.Visible = c.MailUnread > 0;
     }
 
     private static float Fraction(int value, int max) => max > 0 ? Mathf.Clamp(value / (float)max, 0f, 1f) : 0f;

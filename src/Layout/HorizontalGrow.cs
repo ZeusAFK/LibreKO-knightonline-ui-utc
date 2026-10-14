@@ -6,17 +6,17 @@ public sealed class HorizontalGrow
 {
     public enum Mode { Stay, Shift, Stretch }
 
-    private readonly List<(Control Control, float X, float Width, Mode Mode)> _parts = new();
+    private readonly List<(Control Control, float X, float Width, Mode Mode)> parts = new();
 
     public void Add(Control control, Mode mode)
     {
         if (mode == Mode.Stay) return;
-        _parts.Add((control, control.Position.X, control.Size.X, mode));
+        parts.Add((control, control.Position.X, control.Size.X, mode));
     }
 
     public void Apply(float extra)
     {
-        foreach (var (control, x, width, mode) in _parts)
+        foreach (var (control, x, width, mode) in parts)
         {
             if (!GodotObject.IsInstanceValid(control)) continue;
             if (mode == Mode.Shift)

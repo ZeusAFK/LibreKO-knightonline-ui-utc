@@ -61,67 +61,67 @@ public partial class GenieWindow : Control
         ("17", "8", GeniePotionSlot.Hp), ("18", "9", GeniePotionSlot.Pet), ("19", "10", GeniePotionSlot.Mp),
     };
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly LayoutNode _layout;
-    private readonly List<(TextureButton On, TextureButton Off, Func<GenieSetup, bool> Get)> _switches = new();
-    private readonly List<(TextureButton Box, Func<GenieSetup, bool> Get)> _boxes = new();
-    private readonly List<GenieCell> _attackCells = new();
-    private readonly List<GenieCell> _recoveryCells = new();
-    private readonly List<GenieCell> _supportCells = new();
-    private readonly List<TextureButton> _partyBoxes = new();
-    private readonly List<TextureButton> _otherBoxes = new();
-    private readonly List<(GenieCell Cell, Label? Count, GeniePotionSlot Slot)> _potions = new();
-    private readonly List<(RetailTrackbar Bar, Label? Text, Func<GenieSetup, int> Get, Func<int, string> Show)> _bars = new();
-    private readonly LineEdit? _hpCount;
-    private readonly LineEdit? _mpCount;
-    private GenieSetup _setup = new();
-    private int _page = 1;
-    private bool _recoveryStyle;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly LayoutNode layout;
+    private readonly List<(TextureButton On, TextureButton Off, Func<GenieSetup, bool> Get)> switches = new();
+    private readonly List<(TextureButton Box, Func<GenieSetup, bool> Get)> boxes = new();
+    private readonly List<GenieCell> attackCells = new();
+    private readonly List<GenieCell> recoveryCells = new();
+    private readonly List<GenieCell> supportCells = new();
+    private readonly List<TextureButton> partyBoxes = new();
+    private readonly List<TextureButton> otherBoxes = new();
+    private readonly List<(GenieCell Cell, Label? Count, GeniePotionSlot Slot)> potions = new();
+    private readonly List<(RetailTrackbar Bar, Label? Text, Func<GenieSetup, int> Get, Func<int, string> Show)> bars = new();
+    private readonly LineEdit? hpCount;
+    private readonly LineEdit? mpCount;
+    private GenieSetup setup = new();
+    private int page = 1;
+    private bool recoveryStyle;
 
     public GenieWindow(WindowHost host)
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
-        _layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, _layout);
+        game = kit.Game;
+        layout = kit.Layout(LayoutName);
+        view = new LayoutView(kit, layout);
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, TitleBarHeight)));
-        _view.OnPressed("btn_close", () => _game.Genie.Close());
-        foreach (var (id, text, fallback) in Texts) _view.SetText(id, ItemData.Text(text, fallback));
-        if (_view.Get<Label>("str_no_enemy_stay_in_place") is { } home)
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
+        view.OnPressed("btn_close", () => game.Genie.Close());
+        foreach (var (id, text, fallback) in Texts) view.SetText(id, ItemData.Text(text, fallback));
+        if (view.Get<Label>("str_no_enemy_stay_in_place") is { } home)
             home.Text = ItemData.Text(31073, "When no monsters are in the attack range, move to Genie starting location.");
-        if (_view.Get<TextureButton>("btn_rapid_hit") is { } combo) combo.TooltipText = ItemData.Text(31075, "Failed to execute certain skills in the combo.");
-        for (int i = 0; i < GenieSetup.SupportCells; i++) _view.SetText($"str_{i + 1:00}", ItemData.Text(31032, "Party"));
-        _view.Hide("btn_transform_onoff", "str_transform", "btn_transform_list", "grp_transform_list", "EtcHP_str", "EtcMp_str");
+        if (view.Get<TextureButton>("btn_rapid_hit") is { } combo) combo.TooltipText = ItemData.Text(31075, "Failed to execute certain skills in the combo.");
+        for (int i = 0; i < GenieSetup.SupportCells; i++) view.SetText($"str_{i + 1:00}", ItemData.Text(31032, "Party"));
+        view.Hide("btn_transform_onoff", "str_transform", "btn_transform_list", "grp_transform_list", "EtcHP_str", "EtcMp_str");
         HideTransformBand();
-        foreach (var id in RateLines) _view.SetFittedText(id, ItemData.Text(31029, "at % consume potion automatically"));
+        foreach (var id in RateLines) view.SetFittedText(id, ItemData.Text(31029, "at % consume potion automatically"));
         BuildExplanation();
         for (int i = 0; i < Tabs.Length; i++)
         {
             int page = i;
-            if (_view.Get<TextureButton>(Tabs[i]) is { } tab) tab.ToggleMode = true;
-            _view.OnPressed(Tabs[i], () => ShowPage(page));
+            if (view.Get<TextureButton>(Tabs[i]) is { } tab) tab.ToggleMode = true;
+            view.OnPressed(Tabs[i], () => ShowPage(page));
         }
-        _view.OnPressed("btn_attack_style", () => SetRecoveryStyle(false));
-        _view.OnPressed("btn_recovery_style", () => SetRecoveryStyle(true));
+        view.OnPressed("btn_attack_style", () => SetRecoveryStyle(false));
+        view.OnPressed("btn_recovery_style", () => SetRecoveryStyle(true));
         foreach (var id in new[] { "btn_attack_style", "btn_recovery_style" })
-            if (_view.Get<TextureButton>(id) is { } style) style.ToggleMode = true;
+            if (view.Get<TextureButton>(id) is { } style) style.ToggleMode = true;
         foreach (var (on, off, get, set) in Switches)
-            if (_view.Get<TextureButton>(on) is { } onButton && _view.Get<TextureButton>(off) is { } offButton)
+            if (view.Get<TextureButton>(on) is { } onButton && view.Get<TextureButton>(off) is { } offButton)
             {
                 onButton.ToggleMode = offButton.ToggleMode = true;
                 onButton.Pressed += () => Edit(s => set(s, true));
                 offButton.Pressed += () => Edit(s => set(s, false));
-                _switches.Add((onButton, offButton, get));
+                switches.Add((onButton, offButton, get));
             }
         foreach (var (id, get, set) in Boxes)
-            if (_view.Get<TextureButton>(id) is { } box)
+            if (view.Get<TextureButton>(id) is { } box)
             {
                 box.ToggleMode = true;
                 box.Toggled += on => Edit(s => set(s, on));
-                _boxes.Add((box, get));
+                boxes.Add((box, get));
             }
         Bar("scr_autorecovery_rate", "Attack_autorecovery_str", GenieSetup.MinPercent, GenieSetup.MaxPercent,
             s => s.RecoveryPercent, (s, v) => s.RecoveryPercent = v, v => $"{v}%");
@@ -133,63 +133,63 @@ public partial class GenieWindow : Control
             s => s.MpPercent, (s, v) => s.MpPercent = v, v => $"{v}%");
         Bar("scr_pet_recovery_rate", "RecoveryPet_str", GenieSetup.MinPercent, GenieSetup.MaxPercent,
             s => s.PetPercent, (s, v) => s.PetPercent = v, v => $"{v}%");
-        for (int i = 0; i < GenieSetup.AttackCells; i++) if (Cell((i + 1).ToString(), GenieCellKind.Attack, i) is { } attack) _attackCells.Add(attack);
+        for (int i = 0; i < GenieSetup.AttackCells; i++) if (Cell((i + 1).ToString(), GenieCellKind.Attack, i) is { } attack) attackCells.Add(attack);
         for (int i = 0; i < GenieSetup.RecoveryCells; i++)
-            if (Cell((RecoveryCellsFirstArea + i).ToString(), GenieCellKind.Recovery, i) is { } recovery) _recoveryCells.Add(recovery);
+            if (Cell((RecoveryCellsFirstArea + i).ToString(), GenieCellKind.Recovery, i) is { } recovery) recoveryCells.Add(recovery);
         for (int i = 0; i < GenieSetup.SupportCells; i++)
         {
-            if (Cell((SupportFirstArea + i).ToString(), GenieCellKind.Support, i) is { } support) _supportCells.Add(support);
+            if (Cell((SupportFirstArea + i).ToString(), GenieCellKind.Support, i) is { } support) supportCells.Add(support);
             int index = i;
-            if (_view.Get<TextureButton>($"btn_party_{i + 1}") is { } party)
+            if (view.Get<TextureButton>($"btn_party_{i + 1}") is { } party)
             {
                 party.ToggleMode = true;
                 party.Toggled += on => Edit(s => s.SupportParty[index] = on);
-                _partyBoxes.Add(party);
+                partyBoxes.Add(party);
             }
         }
         foreach (var (area, count, slot) in PotionCells)
             if (Cell(area, GenieCellKind.Recovery, -1) is { } cell)
             {
                 var potion = slot;
-                cell.PotionClick = at => _game.Genie.PickPotion(potion, at);
-                _potions.Add((cell, _view.Get<Label>(count), slot));
+                cell.PotionClick = at => game.Genie.PickPotion(potion, at);
+                potions.Add((cell, view.Get<Label>(count), slot));
             }
         var rows = GenieTownReturn.OtherRows;
         for (int i = 0; i < rows.Length; i++)
         {
             var option = rows[i].Option;
-            if (_view.Get<Label>($"str_etc_{i + 1:00}") is { } label)
+            if (view.Get<Label>($"str_etc_{i + 1:00}") is { } label)
             {
                 label.Text = rows[i].Text > 0 ? ItemData.Text(rows[i].Text, rows[i].Label) : rows[i].Label;
                 label.AddThemeFontSizeOverride("font_size", RowFontSize);
                 label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
                 label.VerticalAlignment = VerticalAlignment.Center;
             }
-            if (_view.Get<TextureButton>($"btn_etc_{i + 1}") is { } box && _layout.Find($"btn_etc_{i + 1}") is { } boxNode)
+            if (view.Get<TextureButton>($"btn_etc_{i + 1}") is { } box && layout.Find($"btn_etc_{i + 1}") is { } boxNode)
             {
                 box.ToggleMode = true;
                 NestedStates(box, boxNode);
                 box.Toggled += on => Edit(s => s.Set(option, on));
-                _otherBoxes.Add(box);
+                otherBoxes.Add(box);
             }
         }
-        _hpCount = Count("edit_hp_count", (s, v) => s.TownHpCount = v);
-        _mpCount = Count("edit_mp_count", (s, v) => s.TownMpCount = v);
+        hpCount = Count("edit_hp_count", (s, v) => s.TownHpCount = v);
+        mpCount = Count("edit_mp_count", (s, v) => s.TownMpCount = v);
         BuildMoreLink();
-        ShowPage(_page);
+        ShowPage(page);
     }
 
     public override void _EnterTree()
     {
-        _game.Genie.Changed += Refresh;
+        game.Genie.Changed += Refresh;
         Refresh();
     }
 
-    public override void _ExitTree() => _game.Genie.Changed -= Refresh;
+    public override void _ExitTree() => game.Genie.Changed -= Refresh;
 
     private void BuildExplanation()
     {
-        if (_layout.Find("str_explain") is not { } node || _view.Get<Label>("str_explain") is not { } label) return;
+        if (layout.Find("str_explain") is not { } node || view.Get<Label>("str_explain") is not { } label) return;
         var clip = new Control { ClipContents = true, Position = label.Position, Size = node.SizeVec, MouseFilter = MouseFilterEnum.Ignore };
         label.GetParent().AddChild(clip);
         label.Reparent(clip, false);
@@ -198,8 +198,8 @@ public partial class GenieWindow : Control
         label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         label.Size = new Vector2(node.W, 0);
         label.CustomMinimumSize = new Vector2(node.W, 0);
-        if (_layout.Find("scr_act_height") is not { } bar) return;
-        var scroll = new RetailTrackbar(_view, bar, 0, PercentMax, 10, value =>
+        if (layout.Find("scr_act_height") is not { } bar) return;
+        var scroll = new RetailTrackbar(view, bar, 0, PercentMax, 10, value =>
         {
             float hidden = Mathf.Max(0f, label.GetCombinedMinimumSize().Y - node.H);
             label.Position = new Vector2(0, -hidden * value / PercentMax);
@@ -209,9 +209,9 @@ public partial class GenieWindow : Control
 
     private void HideTransformBand()
     {
-        if (_layout.Find("assist") is not { } assist) return;
+        if (layout.Find("assist") is not { } assist) return;
         foreach (var image in assist.Images)
-            if (image.Y > TransformBandTop && image.Y < TransformBandBottom && image.X >= TransformBandLeft && _view.ControlOf(image) is { } art)
+            if (image.Y > TransformBandTop && image.Y < TransformBandBottom && image.X >= TransformBandLeft && view.ControlOf(image) is { } art)
                 art.Visible = false;
     }
 
@@ -223,7 +223,7 @@ public partial class GenieWindow : Control
             var parts = new List<TextureRect>();
             foreach (var inner in state.Images)
             {
-                if (_view.Atlas(inner) is not { } atlas) continue;
+                if (view.Atlas(inner) is not { } atlas) continue;
                 var part = new TextureRect
                 {
                     Texture = atlas,
@@ -255,36 +255,36 @@ public partial class GenieWindow : Control
 
     private void BuildMoreLink()
     {
-        if (!_game.Genie.HasMore) return;
+        if (!game.Genie.HasMore) return;
         var more = new LinkButton
         {
             Text = "More options",
             Underline = LinkButton.UnderlineMode.OnHover,
-            Position = new Vector2(48, _layout.H - 34),
+            Position = new Vector2(48, layout.H - 34),
             FocusMode = FocusModeEnum.None,
             TooltipText = "Monster list, party code, scrolls, potion choice and the hammer setting",
         };
         more.AddThemeFontSizeOverride("font_size", OverlayFontSize);
         more.AddThemeColorOverride("font_color", new Color(0.93f, 0.92f, 0.45f));
-        more.Pressed += () => _game.Genie.OpenMore();
-        _view.AddChild(more);
+        more.Pressed += () => game.Genie.OpenMore();
+        view.AddChild(more);
     }
 
     private void Bar(string id, string textId, int min, int max, Func<GenieSetup, int> get, Action<GenieSetup, int> set, Func<int, string> show)
     {
-        if (_layout.Find(id) is not { } node) return;
-        var label = _view.Get<Label>(textId);
-        var bar = new RetailTrackbar(_view, node, min, max, 1, v =>
+        if (layout.Find(id) is not { } node) return;
+        var label = view.Get<Label>(textId);
+        var bar = new RetailTrackbar(view, node, min, max, 1, v =>
         {
             if (label != null) label.Text = show(v);
             Edit(s => set(s, v));
         });
-        _bars.Add((bar, label, get, show));
+        bars.Add((bar, label, get, show));
     }
 
     private LineEdit? Count(string id, Action<GenieSetup, int> set)
     {
-        if (_view.Get<LineEdit>(id) is not { } edit) return null;
+        if (view.Get<LineEdit>(id) is not { } edit) return null;
         edit.MaxLength = 3;
         edit.Alignment = HorizontalAlignment.Center;
         void Commit()
@@ -300,8 +300,8 @@ public partial class GenieWindow : Control
 
     private GenieCell? Cell(string area, GenieCellKind kind, int index)
     {
-        if (_view.Get(area) is not { } host) return null;
-        var cell = new GenieCell(_game, kind, index) { Size = host.Size };
+        if (view.Get(area) is not { } host) return null;
+        var cell = new GenieCell(game, kind, index) { Size = host.Size };
         host.MouseFilter = MouseFilterEnum.Pass;
         host.AddChild(cell);
         return cell;
@@ -309,54 +309,54 @@ public partial class GenieWindow : Control
 
     private void Edit(Action<GenieSetup> change)
     {
-        change(_setup);
-        _game.Genie.Apply(_setup);
+        change(setup);
+        game.Genie.Apply(setup);
     }
 
     private void ShowPage(int page)
     {
-        _page = page;
+        this.page = page;
         for (int i = 0; i < Pages.Length; i++)
         {
-            if (_view.Get(Pages[i]) is { } pageControl) pageControl.Visible = i == page;
-            if (_view.Get<TextureButton>(Tabs[i]) is { } tab) tab.SetPressedNoSignal(i == page);
+            if (view.Get(Pages[i]) is { } pageControl) pageControl.Visible = i == page;
+            if (view.Get<TextureButton>(Tabs[i]) is { } tab) tab.SetPressedNoSignal(i == page);
         }
-        SetRecoveryStyle(_recoveryStyle);
+        SetRecoveryStyle(recoveryStyle);
     }
 
     private void SetRecoveryStyle(bool recovery)
     {
-        _recoveryStyle = recovery;
-        foreach (var cell in _attackCells) cell.Visible = !recovery;
-        foreach (var cell in _recoveryCells) cell.Visible = recovery;
-        if (_view.Get<TextureButton>("btn_attack_style") is { } attack) attack.SetPressedNoSignal(!recovery);
-        if (_view.Get<TextureButton>("btn_recovery_style") is { } heal) heal.SetPressedNoSignal(recovery);
+        recoveryStyle = recovery;
+        foreach (var cell in attackCells) cell.Visible = !recovery;
+        foreach (var cell in recoveryCells) cell.Visible = recovery;
+        if (view.Get<TextureButton>("btn_attack_style") is { } attack) attack.SetPressedNoSignal(!recovery);
+        if (view.Get<TextureButton>("btn_recovery_style") is { } heal) heal.SetPressedNoSignal(recovery);
     }
 
     private void Refresh()
     {
-        var genie = _game.Genie;
-        _setup = genie.Setup;
-        foreach (var (on, off, get) in _switches)
+        var genie = game.Genie;
+        setup = genie.Setup;
+        foreach (var (on, off, get) in switches)
         {
-            bool value = get(_setup);
+            bool value = get(setup);
             on.SetPressedNoSignal(value);
             off.SetPressedNoSignal(!value);
         }
-        foreach (var (box, get) in _boxes) box.SetPressedNoSignal(get(_setup));
-        for (int i = 0; i < _partyBoxes.Count; i++) _partyBoxes[i].SetPressedNoSignal(_setup.SupportParty[i]);
+        foreach (var (box, get) in boxes) box.SetPressedNoSignal(get(setup));
+        for (int i = 0; i < partyBoxes.Count; i++) partyBoxes[i].SetPressedNoSignal(setup.SupportParty[i]);
         var rows = GenieTownReturn.OtherRows;
-        for (int i = 0; i < _otherBoxes.Count && i < rows.Length; i++) _otherBoxes[i].SetPressedNoSignal(_setup.Has(rows[i].Option));
-        foreach (var (bar, text, get, show) in _bars)
+        for (int i = 0; i < otherBoxes.Count && i < rows.Length; i++) otherBoxes[i].SetPressedNoSignal(setup.Has(rows[i].Option));
+        foreach (var (bar, text, get, show) in bars)
         {
-            int value = get(_setup);
+            int value = get(setup);
             bar.Value = value;
             if (text != null) text.Text = show(value);
         }
-        if (_hpCount != null && !_hpCount.HasFocus()) _hpCount.Text = _setup.TownHpCount.ToString();
-        if (_mpCount != null && !_mpCount.HasFocus()) _mpCount.Text = _setup.TownMpCount.ToString();
-        foreach (var cell in _attackCells.Concat(_recoveryCells).Concat(_supportCells)) cell.Show(genie.Cell(cell.Kind, cell.Index));
-        foreach (var (cell, count, slot) in _potions)
+        if (hpCount != null && !hpCount.HasFocus()) hpCount.Text = setup.TownHpCount.ToString();
+        if (mpCount != null && !mpCount.HasFocus()) mpCount.Text = setup.TownMpCount.ToString();
+        foreach (var cell in attackCells.Concat(recoveryCells).Concat(supportCells)) cell.Show(genie.Cell(cell.Kind, cell.Index));
+        foreach (var (cell, count, slot) in potions)
         {
             var potion = genie.Potion(slot);
             cell.ShowPotion(potion);
@@ -370,9 +370,9 @@ public partial class GenieWindow : Control
         private const string DragCellKey = "genieCell";
         private const int IconInset = 1;
 
-        private readonly PluginGame _game;
-        private readonly TextureRect _icon;
-        private bool _dragging;
+        private readonly PluginGame game;
+        private readonly TextureRect icon;
+        private bool dragging;
 
         public GenieCellKind Kind { get; }
         public int Index { get; }
@@ -380,33 +380,33 @@ public partial class GenieWindow : Control
 
         public GenieCell(PluginGame game, GenieCellKind kind, int index)
         {
-            _game = game;
+            this.game = game;
             Kind = kind;
             Index = index;
             MouseFilter = MouseFilterEnum.Stop;
-            _icon = new TextureRect
+            icon = new TextureRect
             {
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.Scale,
                 MouseFilter = MouseFilterEnum.Ignore,
             };
-            _icon.SetAnchorsPreset(LayoutPreset.FullRect);
-            _icon.OffsetLeft = IconInset; _icon.OffsetTop = IconInset;
-            _icon.OffsetRight = -IconInset; _icon.OffsetBottom = -IconInset;
-            AddChild(_icon);
+            icon.SetAnchorsPreset(LayoutPreset.FullRect);
+            icon.OffsetLeft = IconInset; icon.OffsetTop = IconInset;
+            icon.OffsetRight = -IconInset; icon.OffsetBottom = -IconInset;
+            AddChild(icon);
         }
 
         private bool IsPotion => Index < 0;
 
         public void Show(GenieCellView view)
         {
-            _icon.Texture = view.Icon;
+            icon.Texture = view.Icon;
             TooltipText = view.Tooltip;
         }
 
         public void ShowPotion(GeniePotionView view)
         {
-            _icon.Texture = view.Icon;
+            icon.Texture = view.Icon;
             TooltipText = view.ItemId > 0 ? $"{view.Name} ({view.Count})" : "Automatic (strongest)";
         }
 
@@ -415,7 +415,7 @@ public partial class GenieWindow : Control
             if (ev is not InputEventMouseButton button) return;
             if (button.ButtonIndex == MouseButton.Right && button.Pressed)
             {
-                if (!IsPotion) _game.Genie.SetCell(Kind, Index, 0);
+                if (!IsPotion) game.Genie.SetCell(Kind, Index, 0);
                 AcceptEvent();
                 return;
             }
@@ -423,26 +423,26 @@ public partial class GenieWindow : Control
             if (!button.Pressed)
             {
                 if (IsPotion) PotionClick?.Invoke(GetGlobalMousePosition());
-                else _game.Genie.PickSkill(Kind, Index, GetGlobalMousePosition());
+                else game.Genie.PickSkill(Kind, Index, GetGlobalMousePosition());
             }
             AcceptEvent();
         }
 
         public override Variant _GetDragData(Vector2 atPosition)
         {
-            if (IsPotion || _icon.Texture == null || _game.Genie.Running) return default;
+            if (IsPotion || icon.Texture == null || game.Genie.Running) return default;
             var preview = new TextureRect
             {
-                Texture = _icon.Texture,
+                Texture = icon.Texture,
                 CustomMinimumSize = Size,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
                 StretchMode = TextureRect.StretchModeEnum.Scale,
             };
             SetDragPreview(preview);
-            _dragging = true;
+            dragging = true;
             return new Godot.Collections.Dictionary
             {
-                { DragIdKey, _game.Genie.Cell(Kind, Index).SkillId }, { DragCellKey, $"{(int)Kind}:{Index}" },
+                { DragIdKey, game.Genie.Cell(Kind, Index).SkillId }, { DragCellKey, $"{(int)Kind}:{Index}" },
             };
         }
 
@@ -454,16 +454,16 @@ public partial class GenieWindow : Control
             var d = data.AsGodotDictionary();
             if (d.ContainsKey(DragCellKey) && d[DragCellKey].AsString().Split(':') is [var kind, var index]
                 && int.TryParse(kind, out int fromKind) && int.TryParse(index, out int fromIndex))
-                _game.Genie.MoveCell((GenieCellKind)fromKind, fromIndex, Kind, Index);
+                game.Genie.MoveCell((GenieCellKind)fromKind, fromIndex, Kind, Index);
             else
-                _game.Genie.SetCell(Kind, Index, d[DragIdKey].AsInt32());
+                game.Genie.SetCell(Kind, Index, d[DragIdKey].AsInt32());
         }
 
         public override void _Notification(int what)
         {
-            if (what != NotificationDragEnd || !_dragging) return;
-            _dragging = false;
-            if (!GetViewport().GuiIsDragSuccessful()) _game.Genie.SetCell(Kind, Index, 0);
+            if (what != NotificationDragEnd || !dragging) return;
+            dragging = false;
+            if (!GetViewport().GuiIsDragSuccessful()) game.Genie.SetCell(Kind, Index, 0);
         }
     }
 }

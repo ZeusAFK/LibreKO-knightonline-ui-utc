@@ -33,40 +33,40 @@ public partial class CharacterWindow : Control
         ("Text_MagicAttack", 4),
     };
 
-    private readonly LayoutView _page;
-    private readonly LayoutView _frame;
-    private readonly FriendsPage _friends;
-    private readonly PluginGame _game;
-    private readonly WindowHost _host;
+    private readonly LayoutView page;
+    private readonly LayoutView frame;
+    private readonly FriendsPage friends;
+    private readonly PluginGame game;
+    private readonly WindowHost host;
 
     public CharacterWindow(WindowHost host)
     {
-        _host = host;
+        this.host = host;
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var pageLayout = kit.Layout(PageLayout);
         var frameLayout = kit.Layout(FrameLayout);
-        _page = new LayoutView(kit, pageLayout);
-        _frame = new LayoutView(kit, frameLayout);
+        page = new LayoutView(kit, pageLayout);
+        frame = new LayoutView(kit, frameLayout);
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_page);
-        _friends = new FriendsPage(kit, _game.Friends);
+        AddChild(page);
+        friends = new FriendsPage(kit, game.Friends);
         var friendsLayout = kit.Layout(FriendsPage.LayoutName);
-        _friends.View.Position = new Vector2(friendsLayout.X - pageLayout.X, friendsLayout.Y - pageLayout.Y);
-        _friends.View.Visible = false;
-        AddChild(_friends.View);
-        AddChild(_frame);
-        _frame.Position = new Vector2(frameLayout.X - pageLayout.X, frameLayout.Y - pageLayout.Y);
-        CustomMinimumSize = new Vector2(Mathf.Max(_page.Size.X, _frame.Size.X), Mathf.Max(_page.Size.Y, _frame.Size.Y));
+        friends.View.Position = new Vector2(friendsLayout.X - pageLayout.X, friendsLayout.Y - pageLayout.Y);
+        friends.View.Visible = false;
+        AddChild(friends.View);
+        AddChild(frame);
+        frame.Position = new Vector2(frameLayout.X - pageLayout.X, frameLayout.Y - pageLayout.Y);
+        CustomMinimumSize = new Vector2(Mathf.Max(page.Size.X, frame.Size.X), Mathf.Max(page.Size.Y, frame.Size.Y));
         Size = CustomMinimumSize;
 
-        host.SetDragHandle(_frame.MakeDragHandle(new Rect2(0, 0, _frame.Size.X, TitleBarHeight)));
-        _frame.OnPressed("btn_close", host.Close);
-        _frame.Hide("btn_knights", "btn_clan", "btn_force");
-        _frame.OnPressed(TitleTab, () => _game.Windows.Toggle(TitlesWindow));
+        host.SetDragHandle(frame.MakeDragHandle(new Rect2(0, 0, frame.Size.X, TitleBarHeight)));
+        frame.OnPressed("btn_close", host.Close);
+        frame.Hide("btn_knights", "btn_clan", "btn_force");
+        frame.OnPressed(TitleTab, () => game.Windows.Toggle(TitlesWindow));
         var tabs = new ButtonGroup();
         foreach (var (id, friendsShown) in new[] { (ActiveTab, false), (FriendsTab, true) })
-            if (_frame.Get<TextureButton>(id) is { } tab)
+            if (frame.Get<TextureButton>(id) is { } tab)
             {
                 tab.ToggleMode = true;
                 tab.ButtonGroup = tabs;
@@ -74,70 +74,70 @@ public partial class CharacterWindow : Control
                 bool show = friendsShown;
                 tab.Pressed += () => ShowFriends(show);
             }
-        _page.Hide("tooltip_rank");
-        _page.OnPressed("btn_preset", () => _game.Windows.Toggle(PresetsWindow));
-        foreach (var (node, control) in _page.Where(n => n.Id.StartsWith("icon_level_")))
+        page.Hide("tooltip_rank");
+        page.OnPressed("btn_preset", () => game.Windows.Toggle(PresetsWindow));
+        foreach (var (node, control) in page.Where(n => n.Id.StartsWith("icon_level_")))
             control.Visible = false;
         foreach (var (button, row) in StatButtons)
         {
             int which = row;
-            _page.OnPressed(button, () => _game.Character.AllocateStat(which));
+            page.OnPressed(button, () => game.Character.AllocateStat(which));
         }
         Refresh();
     }
 
     private void ShowFriends(bool shown)
     {
-        _page.Visible = !shown;
-        _friends.View.Visible = shown;
-        if (shown) _friends.Refresh();
+        page.Visible = !shown;
+        friends.View.Visible = shown;
+        if (shown) friends.Refresh();
     }
 
     public override void _EnterTree()
     {
-        _game.Friends.Changed += _friends.Refresh;
-        _game.Character.Changed += Refresh;
-        _game.BecameAvailable += Refresh;
-        _host.Shown += Refresh;
+        game.Friends.Changed += friends.Refresh;
+        game.Character.Changed += Refresh;
+        game.BecameAvailable += Refresh;
+        host.Shown += Refresh;
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        _game.Friends.Changed -= _friends.Refresh;
-        _game.Character.Changed -= Refresh;
-        _game.BecameAvailable -= Refresh;
-        _host.Shown -= Refresh;
+        game.Friends.Changed -= friends.Refresh;
+        game.Character.Changed -= Refresh;
+        game.BecameAvailable -= Refresh;
+        host.Shown -= Refresh;
     }
 
     private void Refresh()
     {
-        var c = _game.Character;
-        _page.SetText("Text_Id", c.Name);
-        _page.SetText("Text_Class", c.ClassName);
-        _page.SetText("Text_Level", c.Level.ToString());
-        _page.SetText("Text_Nation", c.NationName);
-        _page.SetText("Text_Exp", $"{c.Exp:n0} / {c.MaxExp:n0}");
-        _page.SetText("Text_RealmPoint", c.Np.ToString("n0"));
-        _page.SetText("Text_AP", c.Ap.ToString());
-        _page.SetText("Text_GP", c.Ac.ToString());
-        _page.SetText("Text_Manner", c.Manner.ToString("n0"));
-        _page.SetText("Text_Strength", c.Str.ToString());
-        _page.SetText("Text_Stamina", c.Sta.ToString());
-        _page.SetText("Text_Dexterity", c.Dex.ToString());
-        _page.SetText("Text_MagicAttack", c.Mag.ToString());
-        _page.SetText("Text_Intelligence", c.Intel.ToString());
-        _page.SetText("Text_BonusPoint", c.Points.ToString());
-        _page.SetText("Text_RegistFire", c.Resist(0).ToString());
-        _page.SetText("Text_RegistIce", c.Resist(1).ToString());
-        _page.SetText("Text_RegistLightR", c.Resist(2).ToString());
-        _page.SetText("Text_RegistMagic", c.Resist(3).ToString());
-        _page.SetText("Text_RegistCurse", c.Resist(4).ToString());
-        _page.SetText("Text_RegistPoison", c.Resist(5).ToString());
+        var c = game.Character;
+        page.SetText("Text_Id", c.Name);
+        page.SetText("Text_Class", c.ClassName);
+        page.SetText("Text_Level", c.Level.ToString());
+        page.SetText("Text_Nation", c.NationName);
+        page.SetText("Text_Exp", $"{c.Exp:n0} / {c.MaxExp:n0}");
+        page.SetText("Text_RealmPoint", c.Np.ToString("n0"));
+        page.SetText("Text_AP", c.Ap.ToString());
+        page.SetText("Text_GP", c.Ac.ToString());
+        page.SetText("Text_Manner", c.Manner.ToString("n0"));
+        page.SetText("Text_Strength", c.Str.ToString());
+        page.SetText("Text_Stamina", c.Sta.ToString());
+        page.SetText("Text_Dexterity", c.Dex.ToString());
+        page.SetText("Text_MagicAttack", c.Mag.ToString());
+        page.SetText("Text_Intelligence", c.Intel.ToString());
+        page.SetText("Text_BonusPoint", c.Points.ToString());
+        page.SetText("Text_RegistFire", c.Resist(0).ToString());
+        page.SetText("Text_RegistIce", c.Resist(1).ToString());
+        page.SetText("Text_RegistLightR", c.Resist(2).ToString());
+        page.SetText("Text_RegistMagic", c.Resist(3).ToString());
+        page.SetText("Text_RegistCurse", c.Resist(4).ToString());
+        page.SetText("Text_RegistPoison", c.Resist(5).ToString());
         foreach (var (button, _) in StatButtons)
-            if (_page.Get(button) is { } b) b.Visible = c.Points > 0;
+            if (page.Get(button) is { } b) b.Visible = c.Points > 0;
         foreach (var (text, row) in StatTexts)
-            if (_page.Get(text) is { } label)
+            if (page.Get(text) is { } label)
             {
                 label.MouseFilter = MouseFilterEnum.Pass;
                 label.TooltipText = StatBonusTooltip(c.RebirthStat(row), c.StatBonus(row) - c.RebirthStat(row));

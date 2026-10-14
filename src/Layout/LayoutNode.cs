@@ -63,8 +63,8 @@ public sealed class LayoutNode
     public bool HasClick;
     public int ClickX, ClickY, ClickW, ClickH;
     public int AreaType;
-    private List<LayoutNode> _children = new();
-    public List<LayoutNode> Children => _children;
+    private List<LayoutNode> children = new();
+    public List<LayoutNode> Children => children;
 
     public Rect2I Rect => new(X, Y, W, H);
     public Vector2 Position => new(X, Y);
@@ -99,8 +99,8 @@ public sealed class LayoutNode
         copy.Y += dy;
         copy.DragY += dy;
         copy.ClickY += dy;
-        copy._children = new List<LayoutNode>(_children.Count);
-        foreach (var child in _children) copy._children.Add(child.Copy(idSuffix, dy));
+        copy.children = new List<LayoutNode>(children.Count);
+        foreach (var child in children) copy.children.Add(child.Copy(idSuffix, dy));
         return copy;
     }
 
@@ -115,7 +115,7 @@ public sealed class LayoutNode
     {
         if (Find(id) is not { } original || ParentOf(original) is not { } parent) return null;
         var clone = original.Copy(idSuffix, dy);
-        parent._children.Insert(parent._children.IndexOf(original) + 1, clone);
+        parent.children.Insert(parent.children.IndexOf(original) + 1, clone);
         return clone;
     }
 

@@ -6,16 +6,16 @@ public readonly record struct RetailListItem(string Key, string Text, Color Colo
 
 public sealed class RetailList
 {
-    private readonly LayoutView _view;
-    private readonly List<LayoutNode> _rows;
-    private readonly Action<LayoutNode, RetailListItem?> _paint;
-    private readonly Control? _selectBar;
-    private readonly Control? _thumb;
-    private readonly Rect2 _track;
-    private readonly float _selectTop;
-    private readonly float _thumbTop;
-    private readonly List<RetailListItem> _items = new();
-    private int _first;
+    private readonly LayoutView view;
+    private readonly List<LayoutNode> rows;
+    private readonly Action<LayoutNode, RetailListItem?> paint;
+    private readonly Control? selectBar;
+    private readonly Control? thumb;
+    private readonly Rect2 track;
+    private readonly float selectTop;
+    private readonly float thumbTop;
+    private readonly List<RetailListItem> items = new();
+    private int first;
 
     public string? SelectedKey { get; private set; }
 
@@ -26,12 +26,12 @@ public sealed class RetailList
     public RetailList(LayoutView view, IEnumerable<LayoutNode> rows, Action<LayoutNode, RetailListItem?> paint,
         Control? selectBar, LayoutNode? scrollbar)
     {
-        _view = view;
-        _rows = rows.ToList();
-        _paint = paint;
-        _selectBar = selectBar;
-        _selectTop = selectBar?.Position.Y ?? 0f;
-        for (int i = 0; i < _rows.Count; i++) AddRowHit(i);
+        this.view = view;
+        this.rows = rows.ToList();
+        this.paint = paint;
+        this.selectBar = selectBar;
+        selectTop = selectBar?.Position.Y ?? 0f;
+        for (int i = 0; i < this.rows.Count; i++) AddRowHit(i);
         if (scrollbar == null) return;
         var buttons = scrollbar.Children.Where(n => n.IsButton).ToList();
         if (buttons.Count >= 2)
@@ -39,68 +39,68 @@ public sealed class RetailList
             Hook(buttons[0], () => Scroll(-1));
             Hook(buttons[^1], () => Scroll(1));
         }
-        if (scrollbar.Children.FirstOrDefault(n => n.Type == "trackbar") is { } track)
+        if (scrollbar.Children.FirstOrDefault(n => n.Type == "trackbar") is { } trackNode)
         {
-            _track = new Rect2(track.X, track.Y, track.W, track.H);
-            var images = track.Images.ToList();
-            if (images.Count >= 2) _thumb = view.ControlOf(images[^1]);
-            _thumbTop = _thumb?.Position.Y ?? 0f;
+            track = new Rect2(trackNode.X, trackNode.Y, trackNode.W, trackNode.H);
+            var images = trackNode.Images.ToList();
+            if (images.Count >= 2) thumb = view.ControlOf(images[^1]);
+            thumbTop = thumb?.Position.Y ?? 0f;
         }
     }
 
-    private int Visible => _rows.Count;
+    private int Visible => rows.Count;
 
-    private int MaxFirst => Math.Max(0, _items.Count - Visible);
+    private int MaxFirst => Math.Max(0, items.Count - Visible);
 
     public void SetItems(IReadOnlyList<RetailListItem> items)
     {
-        _items.Clear();
-        _items.AddRange(items);
-        if (SelectedKey != null && !_items.Any(i => i.Key == SelectedKey))
+        this.items.Clear();
+        this.items.AddRange(items);
+        if (SelectedKey != null && !this.items.Any(i => i.Key == SelectedKey))
         {
             SelectedKey = null;
             SelectionChanged?.Invoke(null);
         }
-        _first = Math.Clamp(_first, 0, MaxFirst);
+        first = Math.Clamp(first, 0, MaxFirst);
         Paint();
     }
 
     public void Scroll(int delta)
     {
-        int first = Math.Clamp(_first + delta, 0, MaxFirst);
-        if (first == _first) return;
-        _first = first;
+        int first = Math.Clamp(this.first + delta, 0, MaxFirst);
+        if (first == this.first) return;
+        this.first = first;
         Paint();
     }
 
     private void Paint()
     {
         int selectedRow = -1;
-        for (int i = 0; i < _rows.Count; i++)
+        for (int i = 0; i < rows.Count; i++)
         {
-            int index = _first + i;
-            RetailListItem? item = index < _items.Count ? _items[index] : null;
-            _paint(_rows[i], item);
+            int index = first + i;
+            RetailListItem? item = index < items.Count ? items[index] : null;
+            paint(rows[i], item);
             if (item is { } shown && shown.Key == SelectedKey) selectedRow = i;
-            if (_view.ControlOf(_rows[i]) is { } row) row.TooltipText = item?.Tooltip ?? "";
+            if (view.ControlOf(rows[i]) is { } row) row.TooltipText = item?.Tooltip ?? "";
         }
-        if (_selectBar != null)
+        if (selectBar != null)
         {
-            _selectBar.Visible = selectedRow >= 0;
+            selectBar.Visible = selectedRow >= 0;
             if (selectedRow >= 0)
-                _selectBar.Position = new Vector2(_selectBar.Position.X, _selectTop + _rows[selectedRow].Y - _rows[0].Y);
+                selectBar.Position = new Vector2(selectBar.Position.X, selectTop + rows[selectedRow].Y - rows[0].Y);
         }
-        if (_thumb != null && _track.Size.Y > 0)
+        if (thumb != null && track.Size.Y > 0)
         {
-            float span = Math.Max(0f, _track.Size.Y - _thumb.Size.Y);
-            float share = MaxFirst == 0 ? 0f : (float)_first / MaxFirst;
-            _thumb.Position = new Vector2(_thumb.Position.X, _thumbTop + span * share);
+            float span = Math.Max(0f, track.Size.Y - thumb.Size.Y);
+            float share = MaxFirst == 0 ? 0f : (float)first / MaxFirst;
+            thumb.Position = new Vector2(thumb.Position.X, thumbTop + span * share);
         }
     }
 
     private void AddRowHit(int row)
     {
-        if (_view.ControlOf(_rows[row]) is not { } control) return;
+        if (view.ControlOf(rows[row]) is not { } control) return;
         control.MouseFilter = Control.MouseFilterEnum.Stop;
         control.GuiInput += ev => OnRowInput(control, row, ev);
     }
@@ -113,9 +113,9 @@ public sealed class RetailList
             case MouseButton.WheelUp: Scroll(-1); break;
             case MouseButton.WheelDown: Scroll(1); break;
             case MouseButton.Left or MouseButton.Right:
-                int index = _first + row;
-                if (index >= _items.Count) break;
-                string key = _items[index].Key;
+                int index = first + row;
+                if (index >= items.Count) break;
+                string key = items[index].Key;
                 if (key != SelectedKey)
                 {
                     SelectedKey = key;
@@ -133,6 +133,6 @@ public sealed class RetailList
 
     private void Hook(LayoutNode button, Action action)
     {
-        if (_view.ControlOf(button) is BaseButton b) b.Pressed += action;
+        if (view.ControlOf(button) is BaseButton b) b.Pressed += action;
     }
 }

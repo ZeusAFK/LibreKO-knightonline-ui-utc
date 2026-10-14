@@ -36,89 +36,89 @@ public partial class WorldMapWindow : Control
         [73] = "Group_ronak_base",
     };
 
-    private readonly LayoutView _view;
-    private readonly LayoutNode _layout;
-    private readonly PluginGame _game;
-    private readonly WindowHost _host;
-    private readonly MapOverlay _overlay;
-    private readonly Label _zoneName;
-    private string _shownGroup = "";
+    private readonly LayoutView view;
+    private readonly LayoutNode layout;
+    private readonly PluginGame game;
+    private readonly WindowHost host;
+    private readonly MapOverlay overlay;
+    private readonly Label zoneName;
+    private string shownGroup = "";
 
     public WorldMapWindow(WindowHost host)
     {
-        _host = host;
+        this.host = host;
         var kit = Plugin.Kit;
-        _game = kit.Game;
-        _layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, _layout);
+        game = kit.Game;
+        layout = kit.Layout(LayoutName);
+        view = new LayoutView(kit, layout);
         MouseFilter = MouseFilterEnum.Stop;
-        CustomMinimumSize = _layout.SizeVec;
-        Size = _layout.SizeVec;
-        AddChild(_view);
-        foreach (var child in _layout.Children)
-            if (child.Type == "base" && child.Id != FrameGroup && _view.ControlOf(child) is { } group)
+        CustomMinimumSize = layout.SizeVec;
+        Size = layout.SizeVec;
+        AddChild(view);
+        foreach (var child in layout.Children)
+            if (child.Type == "base" && child.Id != FrameGroup && view.ControlOf(child) is { } group)
                 group.Visible = false;
-        _view.Hide(HiddenFrameIds);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _layout.W, TitleBarHeight)));
-        _view.OnPressed("btn_close", host.Close);
+        view.Hide(HiddenFrameIds);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, layout.W, TitleBarHeight)));
+        view.OnPressed("btn_close", host.Close);
 
-        var list = _layout.Find(ZoneListGroup);
-        var toggle = _layout.Find(FrameGroup)?.Children.LastOrDefault(c => c.Id == ZoneListToggle);
-        float left = (list?.X ?? 0) - _layout.X;
-        float right = (toggle?.X ?? _layout.W) - _layout.X;
-        _zoneName = new Label
+        var list = layout.Find(ZoneListGroup);
+        var toggle = layout.Find(FrameGroup)?.Children.LastOrDefault(c => c.Id == ZoneListToggle);
+        float left = (list?.X ?? 0) - layout.X;
+        float right = (toggle?.X ?? layout.W) - layout.X;
+        zoneName = new Label
         {
-            Position = new Vector2(left, (toggle?.Y ?? 0) - _layout.Y),
+            Position = new Vector2(left, (toggle?.Y ?? 0) - layout.Y),
             Size = new Vector2(Mathf.Max(0f, right - left), toggle?.H ?? 0),
             HorizontalAlignment = HorizontalAlignment.Center,
             VerticalAlignment = VerticalAlignment.Center,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _zoneName.AddThemeFontSizeOverride("font_size", ZoneNameFontSize);
-        _zoneName.AddThemeFontOverride("font", kit.Regular);
-        _zoneName.AddThemeColorOverride("font_color", ZoneNameColor);
-        _view.AddChild(_zoneName);
+        zoneName.AddThemeFontSizeOverride("font_size", ZoneNameFontSize);
+        zoneName.AddThemeFontOverride("font", kit.Regular);
+        zoneName.AddThemeColorOverride("font_color", ZoneNameColor);
+        view.AddChild(zoneName);
 
-        _overlay = new MapOverlay(_game);
-        _view.AddChild(_overlay);
+        overlay = new MapOverlay(game);
+        view.AddChild(overlay);
         Refresh();
     }
 
     public override void _EnterTree()
     {
-        _game.Map.Changed += Refresh;
-        _game.BecameAvailable += Refresh;
-        _host.Shown += Refresh;
+        game.Map.Changed += Refresh;
+        game.BecameAvailable += Refresh;
+        host.Shown += Refresh;
     }
 
     public override void _ExitTree()
     {
-        _game.Map.Changed -= Refresh;
-        _game.BecameAvailable -= Refresh;
-        _host.Shown -= Refresh;
+        game.Map.Changed -= Refresh;
+        game.BecameAvailable -= Refresh;
+        host.Shown -= Refresh;
     }
 
     private void Refresh()
     {
-        var m = _game.Map;
-        _zoneName.Text = m.ZoneName;
+        var m = game.Map;
+        zoneName.Text = m.ZoneName;
         string groupId = ZoneGroups.TryGetValue(m.Zone, out var g) ? g : "";
-        if (groupId != _shownGroup)
+        if (groupId != shownGroup)
         {
-            if (_shownGroup.Length > 0 && _view.Get(_shownGroup) is { } old) old.Visible = false;
-            _shownGroup = groupId;
+            if (shownGroup.Length > 0 && view.Get(shownGroup) is { } old) old.Visible = false;
+            shownGroup = groupId;
             LayoutNode? area = null;
-            if (groupId.Length > 0 && _layout.Find(groupId) is { } group && _view.ControlOf(group) is { } control)
+            if (groupId.Length > 0 && layout.Find(groupId) is { } group && view.ControlOf(group) is { } control)
             {
                 control.Visible = true;
                 area = group.Children.FirstOrDefault(c => c.IsArea);
             }
-            area ??= _layout.Find(ClientArea);
-            _overlay.Painted = groupId.Length > 0;
-            _overlay.Position = area != null ? new Vector2(area.X - _layout.X, area.Y - _layout.Y) : Vector2.Zero;
-            _overlay.Size = area?.SizeVec ?? _layout.SizeVec;
+            area ??= layout.Find(ClientArea);
+            overlay.Painted = groupId.Length > 0;
+            overlay.Position = area != null ? new Vector2(area.X - layout.X, area.Y - layout.Y) : Vector2.Zero;
+            overlay.Size = area?.SizeVec ?? layout.SizeVec;
         }
-        _overlay.QueueRedraw();
+        overlay.QueueRedraw();
     }
 }
 
@@ -131,17 +131,17 @@ public partial class MapOverlay : Control
 
     public bool Painted { get; set; }
 
-    private readonly PluginGame _game;
+    private readonly PluginGame game;
 
     public MapOverlay(PluginGame game)
     {
-        _game = game;
+        this.game = game;
         MouseFilter = MouseFilterEnum.Ignore;
     }
 
     public override void _Draw()
     {
-        var m = _game.Map;
+        var m = game.Map;
         if (!Painted)
         {
             DrawRect(new Rect2(Vector2.Zero, Size), Background);

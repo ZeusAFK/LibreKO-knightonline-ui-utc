@@ -20,45 +20,45 @@ public partial class UserInfoWindow : Control
     private const int TitleBarHeight = 90;
     private const string RelationNone = "-";
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly Dictionary<Label, TextureRect> _ribbons = new();
-    private readonly Texture2D? _noClanMark;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly Dictionary<Label, TextureRect> ribbons = new();
+    private readonly Texture2D? noClanMark;
 
     public UserInfoWindow(WindowHost host)
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
+        game = kit.Game;
+        view = new LayoutView(kit, kit.Layout(LayoutName));
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, TitleBarHeight)));
-        _view.OnPressed("btn_ok", () => _game.UserInfo.Close());
-        _noClanMark = _view.Get<TextureRect>(ClanMarkId)?.Texture;
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
+        view.OnPressed("btn_ok", () => game.UserInfo.Close());
+        noClanMark = view.Get<TextureRect>(ClanMarkId)?.Texture;
     }
 
     public override void _EnterTree()
     {
-        _game.UserInfo.Changed += Refresh;
+        game.UserInfo.Changed += Refresh;
         Refresh();
     }
 
-    public override void _ExitTree() => _game.UserInfo.Changed -= Refresh;
+    public override void _ExitTree() => game.UserInfo.Changed -= Refresh;
 
     private void Refresh()
     {
-        if (_game.UserInfo.Card is not { } card) return;
-        _view.SetText("str_clanname", card.ClanName);
-        _view.SetText("str_rank", card.ClanGrade);
-        _view.SetText("str_master", card.ClanChief);
-        _view.SetText("str_name", card.Name);
-        if (card.NameColour is { } colour && _view.Get<Label>("str_name") is { } name)
+        if (game.UserInfo.Card is not { } card) return;
+        view.SetText("str_clanname", card.ClanName);
+        view.SetText("str_rank", card.ClanGrade);
+        view.SetText("str_master", card.ClanChief);
+        view.SetText("str_name", card.Name);
+        if (card.NameColour is { } colour && view.Get<Label>("str_name") is { } name)
             name.AddThemeColorOverride("font_color", colour);
-        _view.SetText("str_lev", card.Level);
-        _view.SetText("str_job", card.Job);
-        _view.SetText("str_realmpoint", card.Loyalty);
-        _view.SetText("str_radder", card.MonthlyLoyalty);
-        _view.SetText("str_state", card.State);
+        view.SetText("str_lev", card.Level);
+        view.SetText("str_job", card.Job);
+        view.SetText("str_realmpoint", card.Loyalty);
+        view.SetText("str_radder", card.MonthlyLoyalty);
+        view.SetText("str_state", card.State);
         ShowRelation(card.Relation);
         ShowClan(card);
 
@@ -69,8 +69,8 @@ public partial class UserInfoWindow : Control
         {
             bool used = r < card.Rows.Count;
             var row = used ? card.Rows[r] : default;
-            if (_view.Get<Label>(string.Format(TitleFormat, r)) is { } title) title.Text = used ? row.Title : "";
-            if (_view.Get<Label>(string.Format(PlaceFormat, r)) is { } place)
+            if (view.Get<Label>(string.Format(TitleFormat, r)) is { } title) title.Text = used ? row.Title : "";
+            if (view.Get<Label>(string.Format(PlaceFormat, r)) is { } place)
             {
                 place.Text = used ? row.Place : "";
                 place.AddThemeColorOverride("font_color", used ? row.PlaceColour : Colors.White);
@@ -85,14 +85,14 @@ public partial class UserInfoWindow : Control
 
     private void ShowRelation(UserRelation relation)
     {
-        if (_view.Get<Label>("str_friend") is { } friend) friend.Visible = relation == UserRelation.Both;
-        if (_view.Get<Label>("str_guild") is { } guild) guild.Visible = relation == UserRelation.Both;
-        if (_view.Get<Label>("str_relation") is not { } line) return;
+        if (view.Get<Label>("str_friend") is { } friend) friend.Visible = relation == UserRelation.Both;
+        if (view.Get<Label>("str_guild") is { } guild) guild.Visible = relation == UserRelation.Both;
+        if (view.Get<Label>("str_relation") is not { } line) return;
         line.Visible = true;
         line.Text = relation switch
         {
-            UserRelation.Friend => _view.Get<Label>("str_friend")?.Text ?? "Friend",
-            UserRelation.Clan => _view.Get<Label>("str_guild")?.Text ?? "Guild",
+            UserRelation.Friend => view.Get<Label>("str_friend")?.Text ?? "Friend",
+            UserRelation.Clan => view.Get<Label>("str_guild")?.Text ?? "Guild",
             _ => RelationNone,
         };
     }
@@ -103,11 +103,11 @@ public partial class UserInfoWindow : Control
             : card.ClanRanking is >= 1 and <= UserInfoCard.PodiumPlaces ? card.ClanRanking
             : UnrankedPodium;
         for (int i = 0; i <= NoClanPodium; i++)
-            if (_view.Get(string.Format(PodiumFormat, i)) is { } art) art.Visible = i == podium;
-        _view.SetText("rank", card.InClan && card.ClanRanking > UserInfoCard.PodiumPlaces ? card.ClanRanking.ToString() : "");
-        if (_view.Get<TextureRect>(ClanMarkId) is { } mark)
+            if (view.Get(string.Format(PodiumFormat, i)) is { } art) art.Visible = i == podium;
+        view.SetText("rank", card.InClan && card.ClanRanking > UserInfoCard.PodiumPlaces ? card.ClanRanking.ToString() : "");
+        if (view.Get<TextureRect>(ClanMarkId) is { } mark)
         {
-            mark.Texture = card.InClan && card.ClanMark != null ? card.ClanMark : _noClanMark;
+            mark.Texture = card.InClan && card.ClanMark != null ? card.ClanMark : noClanMark;
             mark.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
             mark.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
         }
@@ -115,12 +115,12 @@ public partial class UserInfoWindow : Control
 
     private void ShowRibbon(string id, GameRankRibbon? ribbon)
     {
-        if (_view.Get<Label>(id) is not { } label) return;
+        if (view.Get<Label>(id) is not { } label) return;
         label.Visible = ribbon != null;
         label.Text = ribbon?.Count ?? "";
         label.TooltipText = ribbon?.Tooltip ?? "";
         label.MouseFilter = ribbon != null && ribbon.Value.Tooltip.Length > 0 ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
-        if (!_ribbons.TryGetValue(label, out var image))
+        if (!ribbons.TryGetValue(label, out var image))
         {
             image = new TextureRect
             {
@@ -132,7 +132,7 @@ public partial class UserInfoWindow : Control
             };
             label.AddSibling(image);
             label.GetParent().MoveChild(image, label.GetIndex());
-            _ribbons[label] = image;
+            ribbons[label] = image;
         }
         image.Texture = ribbon?.Ribbon;
         image.Visible = ribbon != null;

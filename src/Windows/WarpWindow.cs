@@ -15,28 +15,28 @@ public partial class WarpWindow : Control
     private const float BlockedAlpha = 0.5f;
     private static readonly Color BlockedColour = new(1f, 0.38f, 0.38f);
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly Label?[] _rows = new Label?[Rows];
-    private readonly Color[] _rowColours = new Color[Rows];
-    private TextureRect? _zone;
-    private Control? _select;
-    private int _first;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly Label?[] rows = new Label?[Rows];
+    private readonly Color[] rowColours = new Color[Rows];
+    private TextureRect? zone;
+    private Control? select;
+    private int first;
 
     public WarpWindow(WindowHost host)
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
+        game = kit.Game;
+        view = new LayoutView(kit, kit.Layout(LayoutName));
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, TitleBarHeight)));
-        _view.OnPressed("btn_close", () => _game.Warp.Close());
-        _view.OnPressed("Btn_Cancel", () => _game.Warp.Close());
-        _view.OnPressed("Btn_Ok", () => _game.Warp.Travel());
-        if (_view.Get(ZoneImage) is { } zoneArea)
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
+        view.OnPressed("btn_close", () => game.Warp.Close());
+        view.OnPressed("Btn_Cancel", () => game.Warp.Close());
+        view.OnPressed("Btn_Ok", () => game.Warp.Travel());
+        if (view.Get(ZoneImage) is { } zoneArea)
         {
-            _zone = new TextureRect
+            zone = new TextureRect
             {
                 Size = zoneArea.Size,
                 ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
@@ -44,16 +44,16 @@ public partial class WarpWindow : Control
                 MouseFilter = MouseFilterEnum.Ignore,
                 ClipContents = true,
             };
-            zoneArea.AddChild(_zone);
+            zoneArea.AddChild(zone);
         }
-        _select = _view.Get(SelectBar);
-        if (_view.Get<Label>("Text_Agreement") is { } text) text.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+        select = view.Get(SelectBar);
+        if (view.Get<Label>("Text_Agreement") is { } text) text.AutowrapMode = TextServer.AutowrapMode.WordSmart;
         for (int i = 0; i < Rows; i++)
         {
-            var label = _view.Get<Label>(RowPrefix + i);
-            _rows[i] = label;
+            var label = view.Get<Label>(RowPrefix + i);
+            rows[i] = label;
             if (label == null) continue;
-            _rowColours[i] = label.GetThemeColor("font_color");
+            rowColours[i] = label.GetThemeColor("font_color");
             int slot = i;
             label.MouseFilter = MouseFilterEnum.Stop;
             label.GuiInput += ev => OnRowInput(slot, ev);
@@ -62,28 +62,28 @@ public partial class WarpWindow : Control
 
     public override void _EnterTree()
     {
-        _game.Warp.Changed += Refresh;
+        game.Warp.Changed += Refresh;
         Refresh();
     }
 
-    public override void _ExitTree() => _game.Warp.Changed -= Refresh;
+    public override void _ExitTree() => game.Warp.Changed -= Refresh;
 
     private void OnRowInput(int slot, InputEvent ev)
     {
         if (ev is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click) return;
-        int index = _first + slot;
-        if (index >= _game.Warp.Rows.Count) return;
-        _game.Warp.Select(index);
-        if (click.DoubleClick) _game.Warp.Travel();
+        int index = first + slot;
+        if (index >= game.Warp.Rows.Count) return;
+        game.Warp.Select(index);
+        if (click.DoubleClick) game.Warp.Travel();
         AcceptEvent();
     }
 
     public override void _GuiInput(InputEvent ev)
     {
         if (ev is not InputEventMouseButton { Pressed: true } wheel) return;
-        int max = Mathf.Max(0, _game.Warp.Rows.Count - Rows);
-        if (wheel.ButtonIndex == MouseButton.WheelUp) _first = Mathf.Max(0, _first - 1);
-        else if (wheel.ButtonIndex == MouseButton.WheelDown) _first = Mathf.Min(max, _first + 1);
+        int max = Mathf.Max(0, game.Warp.Rows.Count - Rows);
+        if (wheel.ButtonIndex == MouseButton.WheelUp) first = Mathf.Max(0, first - 1);
+        else if (wheel.ButtonIndex == MouseButton.WheelDown) first = Mathf.Min(max, first + 1);
         else return;
         Refresh();
         AcceptEvent();
@@ -91,37 +91,37 @@ public partial class WarpWindow : Control
 
     private void Refresh()
     {
-        var warp = _game.Warp;
-        var rows = warp.Rows;
+        var warp = game.Warp;
+        var warpRows = warp.Rows;
         int selected = warp.Selected;
-        if (selected >= 0 && (selected < _first || selected >= _first + Rows))
-            _first = Mathf.Clamp(selected - Rows + 1, 0, Mathf.Max(0, rows.Count - Rows));
+        if (selected >= 0 && (selected < first || selected >= first + Rows))
+            first = Mathf.Clamp(selected - Rows + 1, 0, Mathf.Max(0, warpRows.Count - Rows));
         for (int i = 0; i < Rows; i++)
         {
-            if (_rows[i] is not { } label) continue;
-            int index = _first + i;
-            bool used = index < rows.Count;
+            if (rows[i] is not { } label) continue;
+            int index = first + i;
+            bool used = index < warpRows.Count;
             label.Visible = used;
             if (!used) continue;
-            var row = rows[index];
+            var row = warpRows[index];
             label.Text = $"{row.Name}   {row.Fee}";
             label.TooltipText = row.Blocked ?? row.Levels;
-            label.AddThemeColorOverride("font_color", row.Blocked != null ? BlockedColour : _rowColours[i]);
+            label.AddThemeColorOverride("font_color", row.Blocked != null ? BlockedColour : rowColours[i]);
             label.Modulate = new Color(1f, 1f, 1f, row.Blocked != null ? BlockedAlpha : 1f);
         }
-        if (_select != null)
+        if (select != null)
         {
-            int slot = selected - _first;
-            _select.Visible = slot >= 0 && slot < Rows && _rows[slot] != null;
-            if (_select.Visible) _select.Position = new Vector2(_select.Position.X, _rows[slot]!.Position.Y);
+            int slot = selected - first;
+            select.Visible = slot >= 0 && slot < Rows && rows[slot] != null;
+            if (select.Visible) select.Position = new Vector2(select.Position.X, rows[slot]!.Position.Y);
         }
-        if (selected >= 0 && selected < rows.Count)
+        if (selected >= 0 && selected < warpRows.Count)
         {
-            var row = rows[selected];
-            _view.SetText("str_level", row.Levels);
-            _view.SetText("Text_Agreement", row.Blocked ?? row.Description);
-            if (_zone != null) _zone.Texture = row.Image;
-            if (_view.Get<BaseButton>("Btn_Ok") is { } ok) ok.Disabled = row.Blocked != null;
+            var row = warpRows[selected];
+            view.SetText("str_level", row.Levels);
+            view.SetText("Text_Agreement", row.Blocked ?? row.Description);
+            if (zone != null) zone.Texture = row.Image;
+            if (view.Get<BaseButton>("Btn_Ok") is { } ok) ok.Disabled = row.Blocked != null;
         }
     }
 }

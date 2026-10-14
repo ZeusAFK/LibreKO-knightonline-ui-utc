@@ -28,37 +28,37 @@ public partial class TargetFrame : Control
         [TargetHpLook.Slow] = 4,
     };
 
-    private readonly LayoutView _view;
-    private readonly PluginGame _game;
-    private readonly Label _hpText;
+    private readonly LayoutView view;
+    private readonly PluginGame game;
+    private readonly Label hpText;
     private const string DropRow = "base_EventDropList";
     private const string DropRowSuffix = "_";
     private const int DropRowStep = 25;
     private const int DropRows = 3;
     private const int DropTextSize = 11;
-    private readonly LayoutNode?[] _dropRows = new LayoutNode?[DropRows];
-    private readonly TextureRect?[] _dropIcons = new TextureRect?[DropRows];
-    private readonly Label?[] _dropLines = new Label?[DropRows];
+    private readonly LayoutNode?[] dropRows = new LayoutNode?[DropRows];
+    private readonly TextureRect?[] dropIcons = new TextureRect?[DropRows];
+    private readonly Label?[] dropLines = new Label?[DropRows];
 
     public TargetFrame()
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
         for (int i = 1; i < DropRows; i++)
             if (layout.Find(DropRow + DropRowSuffix + i) == null)
                 layout.CloneBelow(DropRow, DropRowSuffix + i, DropRowStep * i);
-        _view = new LayoutView(kit, layout);
-        Size = _view.Size;
+        view = new LayoutView(kit, layout);
+        Size = view.Size;
         MouseFilter = MouseFilterEnum.Ignore;
-        AddChild(_view);
-        foreach (var (node, control) in _view.Where(n => n.Id.StartsWith("frame_") && n.Id != FrameShown))
+        AddChild(view);
+        foreach (var (node, control) in view.Where(n => n.Id.StartsWith("frame_") && n.Id != FrameShown))
             control.Visible = false;
-        _view.Hide("base_mon_hp_level_long", "base_cover", "Button_Board");
+        view.Hide("base_mon_hp_level_long", "base_cover", "Button_Board");
         BuildDropRows(layout);
-        foreach (var (node, control) in _view.Where(n => n.Id.StartsWith("grpg_level_") && n.Id != HpBar))
+        foreach (var (node, control) in view.Where(n => n.Id.StartsWith("grpg_level_") && n.Id != HpBar))
             control.Visible = false;
-        _hpText = BuildHpText();
+        hpText = BuildHpText();
         ShowState(-1);
         Visible = false;
     }
@@ -69,8 +69,8 @@ public partial class TargetFrame : Control
         {
             string suffix = i == 0 ? "" : DropRowSuffix + i;
             if (layout.Find(DropRow + suffix) is not { } row) continue;
-            _dropRows[i] = row;
-            if (_view.Get(row, "icon" + suffix) is { } iconArea)
+            dropRows[i] = row;
+            if (view.Get(row, "icon" + suffix) is { } iconArea)
             {
                 var icon = new TextureRect
                 {
@@ -80,9 +80,9 @@ public partial class TargetFrame : Control
                     MouseFilter = MouseFilterEnum.Ignore,
                 };
                 iconArea.AddChild(icon);
-                _dropIcons[i] = icon;
+                dropIcons[i] = icon;
             }
-            if (_view.Get(row, "name" + suffix) is { } nameArea)
+            if (view.Get(row, "name" + suffix) is { } nameArea)
             {
                 var line = new Label
                 {
@@ -96,9 +96,9 @@ public partial class TargetFrame : Control
                 line.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
                 line.AddThemeConstantOverride("outline_size", HpTextOutline);
                 nameArea.AddChild(line);
-                _dropLines[i] = line;
+                dropLines[i] = line;
             }
-            if (_view.ControlOf(row) is { } frame) frame.Visible = false;
+            if (view.ControlOf(row) is { } frame) frame.Visible = false;
         }
     }
 
@@ -107,16 +107,16 @@ public partial class TargetFrame : Control
         for (int i = 0; i < DropRows; i++)
         {
             bool used = i < drops.Count;
-            if (_dropRows[i] is { } row && _view.ControlOf(row) is { } frame) frame.Visible = used;
+            if (dropRows[i] is { } row && view.ControlOf(row) is { } frame) frame.Visible = used;
             if (!used) continue;
-            if (_dropIcons[i] is { } icon) icon.Texture = drops[i].Icon;
-            if (_dropLines[i] is { } line) line.Text = drops[i].Line;
+            if (dropIcons[i] is { } icon) icon.Texture = drops[i].Icon;
+            if (dropLines[i] is { } line) line.Text = drops[i].Line;
         }
     }
 
     private Label BuildHpText()
     {
-        var bar = _view.Where(n => n.Id == HpBarGroup).First().Node;
+        var bar = view.Where(n => n.Id == HpBarGroup).First().Node;
         var label = new Label
         {
             Position = new Vector2(bar.X, bar.Y - HpTextOverhang * 0.5f),
@@ -129,15 +129,15 @@ public partial class TargetFrame : Control
         label.AddThemeColorOverride("font_color", Colors.White);
         label.AddThemeColorOverride("font_outline_color", new Color(0f, 0f, 0f, 0.85f));
         label.AddThemeConstantOverride("outline_size", HpTextOutline);
-        _view.AddChild(label);
+        view.AddChild(label);
         return label;
     }
 
     public override void _EnterTree()
     {
-        _game.Target.Changed += Refresh;
-        _game.BecameAvailable += Refresh;
-        _game.BecameUnavailable += Refresh;
+        game.Target.Changed += Refresh;
+        game.BecameAvailable += Refresh;
+        game.BecameUnavailable += Refresh;
         GetViewport().SizeChanged += Place;
         Place();
         Refresh();
@@ -145,9 +145,9 @@ public partial class TargetFrame : Control
 
     public override void _ExitTree()
     {
-        _game.Target.Changed -= Refresh;
-        _game.BecameAvailable -= Refresh;
-        _game.BecameUnavailable -= Refresh;
+        game.Target.Changed -= Refresh;
+        game.BecameAvailable -= Refresh;
+        game.BecameUnavailable -= Refresh;
         GetViewport().SizeChanged -= Place;
     }
 
@@ -159,23 +159,23 @@ public partial class TargetFrame : Control
 
     private void ShowState(int state)
     {
-        if (_view.Get(HpBarGroup) is { } normal) normal.Visible = state < 0;
-        if (_view.Get(StateGroup) is { } group) group.Visible = state >= 0;
+        if (view.Get(HpBarGroup) is { } normal) normal.Visible = state < 0;
+        if (view.Get(StateGroup) is { } group) group.Visible = state >= 0;
         for (int i = 0; i < StateBars; i++)
-            if (_view.Get(StateBarPrefix + i) is { } bar) bar.Visible = i == state;
+            if (view.Get(StateBarPrefix + i) is { } bar) bar.Visible = i == state;
     }
 
     private void Refresh()
     {
-        var t = _game.Target;
-        Visible = _game.Available && t.Has;
+        var t = game.Target;
+        Visible = game.Available && t.Has;
         if (!Visible) return;
-        _view.SetText("name", t.Level > 0 ? $"{t.Name}  Lv.{t.Level}" : t.Name);
+        view.SetText("name", t.Level > 0 ? $"{t.Name}  Lv.{t.Level}" : t.Name);
         float fraction = t.MaxHp > 0 ? t.Hp / (float)t.MaxHp : 1f;
         int state = StateOfLook.TryGetValue(t.HpLook, out int s) ? s : -1;
         ShowState(state);
-        _view.SetProgress(state < 0 ? HpBar : StateBarPrefix + state, fraction);
-        _hpText.Text = t.MaxHp > 0 ? $"{t.Hp} / {t.MaxHp}" : "";
+        view.SetProgress(state < 0 ? HpBar : StateBarPrefix + state, fraction);
+        hpText.Text = t.MaxHp > 0 ? $"{t.Hp} / {t.MaxHp}" : "";
         ShowDropRows(t.QuestDrops);
     }
 }

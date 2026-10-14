@@ -22,89 +22,89 @@ public partial class InventoryWindow : Control
     private const int BagTabFontSize = 11;
     private static readonly Color BagTabTextColor = new(0.96f, 0.93f, 0.80f);
 
-    private readonly LayoutView _view;
-    private TextureButton? _rankerFx;
-    private readonly PluginGame _game;
-    private readonly WindowHost _host;
-    private readonly List<ItemSlot> _slots = new();
-    private readonly List<ItemSlot> _bagSlots = new();
-    private readonly Dictionary<int, ItemSlot> _bySlot = new();
-    private readonly TextureRect _carry;
-    private readonly int _leftPanelWidth;
-    private bool _cospreOpen;
-    private int _bag;
-    private int _carried = -1;
-    private TextureRect? _portrait;
-    private bool _portraitOn;
+    private readonly LayoutView view;
+    private TextureButton? rankerFx;
+    private readonly PluginGame game;
+    private readonly WindowHost host;
+    private readonly List<ItemSlot> slots = new();
+    private readonly List<ItemSlot> bagSlots = new();
+    private readonly Dictionary<int, ItemSlot> bySlot = new();
+    private readonly TextureRect carry;
+    private readonly int leftPanelWidth;
+    private bool cospreOpen;
+    private int bag;
+    private int carried = -1;
+    private TextureRect? portrait;
+    private bool portraitOn;
 
     public InventoryWindow(WindowHost host)
     {
-        _host = host;
+        this.host = host;
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout);
-        _leftPanelWidth = layout.Images.Where(i => i.Id.Length == 0).Select(i => i.X).DefaultIfEmpty(0).Min();
+        view = new LayoutView(kit, layout);
+        leftPanelWidth = layout.Images.Where(i => i.Id.Length == 0).Select(i => i.X).DefaultIfEmpty(0).Min();
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        _view.Hide(CospreGroup, "base_samma", "base_bag", "base_inven_notice", "base_LockImg", "elmo_ecli666",
+        AddChild(view);
+        view.Hide(CospreGroup, "base_samma", "base_bag", "base_inven_notice", "base_LockImg", "elmo_ecli666",
             "btn_helmetview", "btn_gold", "btn_trashlock", "btn_CosPreView", "btn_talisman", "btn_FairyView",
             "btn_emblePreView", "btn_WingPreView_0", "btn_WingPreView_1", "btn_WingPreView_2", "img_hide");
 
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(_leftPanelWidth, 0, _view.Size.X - _leftPanelWidth, TitleBarHeight)));
-        _view.OnPressed("btn_close", host.Close);
-        _view.OnPressed("btn_open_cos", () => SetCospreOpen(!_cospreOpen));
-        _view.OnPressed("btn_close_cos", () => SetCospreOpen(false));
-        _view.OnPressed("btn_item_arrangement", () => _game.Inventory.Arrange());
-        if (_view.Get<TextureButton>(RankerFxButton) is { } rankerFx)
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(leftPanelWidth, 0, view.Size.X - leftPanelWidth, TitleBarHeight)));
+        view.OnPressed("btn_close", host.Close);
+        view.OnPressed("btn_open_cos", () => SetCospreOpen(!cospreOpen));
+        view.OnPressed("btn_close_cos", () => SetCospreOpen(false));
+        view.OnPressed("btn_item_arrangement", () => game.Inventory.Arrange());
+        if (view.Get<TextureButton>(RankerFxButton) is { } rankerFx)
         {
             rankerFx.ToggleMode = true;
-            rankerFx.Toggled += shown => _game.Character.SetRankAuraShown(shown);
-            _rankerFx = rankerFx;
+            rankerFx.Toggled += shown => game.Character.SetRankAuraShown(shown);
+            this.rankerFx = rankerFx;
         }
         var bagTabs = new ButtonGroup();
         for (int bag = 0; bag < InventoryConstants.BagSlotMax; bag++)
         {
             int which = bag;
             string id = $"btn_bag{bag + 1}";
-            if (_view.Get<TextureButton>(id) is { } tab)
+            if (view.Get<TextureButton>(id) is { } tab)
             {
                 tab.ToggleMode = true;
                 tab.ButtonGroup = bagTabs;
                 tab.ButtonPressed = bag == 0;
             }
-            _view.OnPressed(id, () => SelectBag(which));
-            _view.Caption(id, $"Bag{bag + 1}", BagTabFontSize, BagTabTextColor);
+            view.OnPressed(id, () => SelectBag(which));
+            view.Caption(id, $"Bag{bag + 1}", BagTabFontSize, BagTabTextColor);
         }
 
-        foreach (var (node, control) in _view.Areas(EquipAreaType))
+        foreach (var (node, control) in view.Areas(EquipAreaType))
             if (int.TryParse(node.Id, out int equip) && equip < InventoryConstants.SlotMax)
-                _slots.Add(BindSlot(control, equip));
-        foreach (var (node, control) in _view.Areas(GridAreaType))
-            _slots.Add(BindSlot(control, InventoryConstants.InventoryStart + int.Parse(node.Id)));
+                slots.Add(BindSlot(control, equip));
+        foreach (var (node, control) in view.Areas(GridAreaType))
+            slots.Add(BindSlot(control, InventoryConstants.InventoryStart + int.Parse(node.Id)));
         var bagSockets = layout.Find(MagicBagGroup);
-        foreach (var (node, control) in _view.Areas(CospreAreaType))
-            _slots.Add(BindSlot(control, bagSockets != null && bagSockets.All().Contains(node)
+        foreach (var (node, control) in view.Areas(CospreAreaType))
+            slots.Add(BindSlot(control, bagSockets != null && bagSockets.All().Contains(node)
                 ? InventoryConstants.BagSlotStart + int.Parse(node.Id) - FirstMagicBagSocketId
                 : InventoryConstants.CospreStart + int.Parse(node.Id)));
-        foreach (var (node, control) in _view.Areas(BagAreaType))
-            _bagSlots.Add(BindSlot(control, InventoryConstants.MagicBagStart + int.Parse(node.Id)));
+        foreach (var (node, control) in view.Areas(BagAreaType))
+            bagSlots.Add(BindSlot(control, InventoryConstants.MagicBagStart + int.Parse(node.Id)));
 
-        if (_view.Get("area_samma") is { } trash)
+        if (view.Get("area_samma") is { } trash)
         {
             var target = new DropTarget
             {
                 Position = trash.Position,
                 Size = trash.Size,
-                OnDrop = from => _game.Inventory.Drop(from),
-                OnClick = () => { if (_carried < 0) return; int from = _carried; CancelCarry(); _game.Inventory.Drop(from); },
+                OnDrop = from => game.Inventory.Drop(from),
+                OnClick = () => { if (carried < 0) return; int from = carried; CancelCarry(); game.Inventory.Drop(from); },
             };
             trash.GetParent().AddChild(target);
         }
 
-        if (_view.Get("area_char") is { } charArea)
+        if (view.Get("area_char") is { } charArea)
         {
-            _portrait = new TextureRect
+            portrait = new TextureRect
             {
                 Position = charArea.Position,
                 Size = charArea.Size,
@@ -113,10 +113,10 @@ public partial class InventoryWindow : Control
                 MouseFilter = MouseFilterEnum.Ignore,
                 ClipContents = true,
             };
-            charArea.GetParent().AddChild(_portrait);
+            charArea.GetParent().AddChild(portrait);
         }
 
-        _carry = new TextureRect
+        carry = new TextureRect
         {
             Visible = false,
             Size = CarrySize,
@@ -125,7 +125,7 @@ public partial class InventoryWindow : Control
             MouseFilter = MouseFilterEnum.Ignore,
             ZIndex = 10,
         };
-        AddChild(_carry);
+        AddChild(carry);
         SetProcess(false);
         SetCospreOpen(false);
         Refresh();
@@ -137,171 +137,171 @@ public partial class InventoryWindow : Control
         {
             Position = area.Position,
             Size = area.Size,
-            Source = s => _game.Inventory.At(s),
-            OnDrop = (from, to) => { CancelCarry(); _game.Inventory.Move(from, to); },
+            Source = s => game.Inventory.At(s),
+            OnDrop = (from, to) => { CancelCarry(); game.Inventory.Move(from, to); },
             OnClick = SlotClicked,
             OnActivate = SlotActivated,
-            OnDoubleClick = s => { CancelCarry(); _game.Inventory.Use(s); },
-            OnHover = (s, over) => { if (over) _game.Inventory.ShowTooltip(s); else _game.Inventory.HideTooltip(); },
+            OnDoubleClick = s => { CancelCarry(); game.Inventory.Use(s); },
+            OnHover = (s, over) => { if (over) game.Inventory.ShowTooltip(s); else game.Inventory.HideTooltip(); },
         };
         area.GetParent().AddChild(cell);
-        _bySlot[slot] = cell;
+        bySlot[slot] = cell;
         return cell;
     }
 
     private void SlotClicked(int slot)
     {
-        if (_carried < 0)
+        if (carried < 0)
         {
-            if (_game.Inventory.At(slot).IsEmpty) return;
-            _carried = slot;
-            _carry.Texture = _game.Inventory.At(slot).Icon;
-            _carry.Visible = true;
-            _carry.Position = GetLocalMousePosition() - CarrySize * 0.5f;
-            if (_bySlot.TryGetValue(slot, out var cell)) cell.SetCarried(true);
-            _game.Inventory.HideTooltip();
+            if (game.Inventory.At(slot).IsEmpty) return;
+            carried = slot;
+            carry.Texture = game.Inventory.At(slot).Icon;
+            carry.Visible = true;
+            carry.Position = GetLocalMousePosition() - CarrySize * 0.5f;
+            if (bySlot.TryGetValue(slot, out var cell)) cell.SetCarried(true);
+            game.Inventory.HideTooltip();
             SetProcess(true);
             return;
         }
-        int from = _carried;
+        int from = carried;
         CancelCarry();
-        if (from != slot) _game.Inventory.Move(from, slot);
+        if (from != slot) game.Inventory.Move(from, slot);
     }
 
     private void SlotActivated(int slot)
     {
-        if (_carried >= 0) { CancelCarry(); return; }
-        _game.Inventory.Use(slot);
+        if (carried >= 0) { CancelCarry(); return; }
+        game.Inventory.Use(slot);
     }
 
     private void CancelCarry()
     {
-        if (_carried >= 0 && _bySlot.TryGetValue(_carried, out var cell)) cell.SetCarried(false);
-        _carried = -1;
-        _carry.Visible = false;
+        if (carried >= 0 && bySlot.TryGetValue(carried, out var cell)) cell.SetCarried(false);
+        carried = -1;
+        carry.Visible = false;
         SetProcess(false);
     }
 
     public override void _Process(double delta)
     {
-        if (_carried < 0) return;
-        _carry.Position = GetLocalMousePosition() - CarrySize * 0.5f;
+        if (carried < 0) return;
+        carry.Position = GetLocalMousePosition() - CarrySize * 0.5f;
     }
 
     public override void _Input(InputEvent ev)
     {
-        if (_carried < 0 || ev is not InputEventKey { Pressed: true, Keycode: Key.Escape }) return;
+        if (carried < 0 || ev is not InputEventKey { Pressed: true, Keycode: Key.Escape }) return;
         CancelCarry();
         GetViewport().SetInputAsHandled();
     }
 
     private void SetCospreOpen(bool open)
     {
-        bool wasOpen = _cospreOpen;
-        _cospreOpen = open;
-        if (_view.Get(CospreGroup) is { } cos) cos.Visible = open;
-        float width = open ? _view.Size.X : _view.Size.X - _leftPanelWidth;
-        _view.Position = new Vector2(open ? 0 : -_leftPanelWidth, 0);
-        CustomMinimumSize = new Vector2(width, _view.Size.Y);
+        bool wasOpen = cospreOpen;
+        cospreOpen = open;
+        if (view.Get(CospreGroup) is { } cos) cos.Visible = open;
+        float width = open ? view.Size.X : view.Size.X - leftPanelWidth;
+        view.Position = new Vector2(open ? 0 : -leftPanelWidth, 0);
+        CustomMinimumSize = new Vector2(width, view.Size.Y);
         Size = CustomMinimumSize;
         if (wasOpen != open && IsInsideTree())
-            _host.Window.Position += new Vector2(open ? -_leftPanelWidth : _leftPanelWidth, 0);
+            host.Window.Position += new Vector2(open ? -leftPanelWidth : leftPanelWidth, 0);
     }
 
     private void SelectBag(int bag)
     {
-        _bag = Mathf.Clamp(bag, 0, InventoryConstants.BagSlotMax - 1);
+        this.bag = Mathf.Clamp(bag, 0, InventoryConstants.BagSlotMax - 1);
         RefreshBags();
     }
 
     private void RefreshBags()
     {
-        for (int i = 0; i < _bagSlots.Count; i++)
+        for (int i = 0; i < bagSlots.Count; i++)
         {
-            var cell = _bagSlots[i];
-            int slot = InventoryConstants.MagicBagStart + _bag * InventoryConstants.MagicBagMax + i;
-            cell.Source = _ => _game.Inventory.At(slot);
-            cell.OnDrop = (from, _) => { CancelCarry(); _game.Inventory.Move(from, slot); };
+            var cell = bagSlots[i];
+            int slot = InventoryConstants.MagicBagStart + bag * InventoryConstants.MagicBagMax + i;
+            cell.Source = _ => game.Inventory.At(slot);
+            cell.OnDrop = (from, _) => { CancelCarry(); game.Inventory.Move(from, slot); };
             cell.OnClick = _ => SlotClicked(slot);
             cell.OnActivate = _ => SlotActivated(slot);
-            cell.OnDoubleClick = _ => { CancelCarry(); _game.Inventory.Use(slot); };
-            cell.OnHover = (_, over) => { if (over) _game.Inventory.ShowTooltip(slot); else _game.Inventory.HideTooltip(); };
+            cell.OnDoubleClick = _ => { CancelCarry(); game.Inventory.Use(slot); };
+            cell.OnHover = (_, over) => { if (over) game.Inventory.ShowTooltip(slot); else game.Inventory.HideTooltip(); };
             cell.Refresh();
         }
     }
 
     public override void _EnterTree()
     {
-        _game.Inventory.Changed += Refresh;
-        _game.Character.Changed += RefreshTotals;
-        _game.BecameAvailable += Refresh;
-        _host.Shown += Refresh;
-        _host.Shown += ShowPortrait;
-        _host.Hidden += OnHidden;
+        game.Inventory.Changed += Refresh;
+        game.Character.Changed += RefreshTotals;
+        game.BecameAvailable += Refresh;
+        host.Shown += Refresh;
+        host.Shown += ShowPortrait;
+        host.Hidden += OnHidden;
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        _game.Inventory.Changed -= Refresh;
-        _game.Character.Changed -= RefreshTotals;
-        _game.BecameAvailable -= Refresh;
-        _host.Shown -= Refresh;
-        _host.Shown -= ShowPortrait;
-        _host.Hidden -= OnHidden;
+        game.Inventory.Changed -= Refresh;
+        game.Character.Changed -= RefreshTotals;
+        game.BecameAvailable -= Refresh;
+        host.Shown -= Refresh;
+        host.Shown -= ShowPortrait;
+        host.Hidden -= OnHidden;
         HidePortrait();
     }
 
     private void ShowPortrait()
     {
-        if (_portrait == null || _portraitOn) return;
-        _portraitOn = true;
-        _game.Character.SetPortraitShown(true);
-        _portrait.Texture = _game.Character.Portrait;
+        if (portrait == null || portraitOn) return;
+        portraitOn = true;
+        game.Character.SetPortraitShown(true);
+        portrait.Texture = game.Character.Portrait;
     }
 
     private void HidePortrait()
     {
-        if (!_portraitOn) return;
-        _portraitOn = false;
-        _game.Character.SetPortraitShown(false);
+        if (!portraitOn) return;
+        portraitOn = false;
+        game.Character.SetPortraitShown(false);
     }
 
     private void OnHidden()
     {
         HidePortrait();
         CancelCarry();
-        _game.Inventory.HideTooltip();
+        game.Inventory.HideTooltip();
     }
 
     private void Refresh()
     {
-        foreach (var cell in _slots) cell.Refresh();
+        foreach (var cell in slots) cell.Refresh();
         GhostOtherHand(InventoryConstants.RightHand, InventoryConstants.LeftHand);
         GhostOtherHand(InventoryConstants.LeftHand, InventoryConstants.RightHand);
         RefreshBags();
         RefreshTotals();
-        if (_carried >= 0 && _game.Inventory.At(_carried).IsEmpty) CancelCarry();
+        if (carried >= 0 && game.Inventory.At(carried).IsEmpty) CancelCarry();
     }
 
     private void GhostOtherHand(int hand, int other)
     {
-        var item = _game.Inventory.At(hand);
-        if (!item.TwoHanded || !_bySlot.TryGetValue(other, out var cell)) return;
+        var item = game.Inventory.At(hand);
+        if (!item.TwoHanded || !bySlot.TryGetValue(other, out var cell)) return;
         cell.SetGhost(item.Icon);
     }
 
     private void RefreshTotals()
     {
-        if (_rankerFx != null && IsInstanceValid(_rankerFx))
+        if (rankerFx != null && IsInstanceValid(rankerFx))
         {
-            _rankerFx.Visible = _game.Character.HasRankAura;
-            _rankerFx.SetPressedNoSignal(_game.Character.RankAuraShown);
+            rankerFx.Visible = game.Character.HasRankAura;
+            rankerFx.SetPressedNoSignal(game.Character.RankAuraShown);
         }
-        var c = _game.Character;
-        _view.SetFittedText("text_gold", c.Gold.ToString("n0"));
-        _view.SetFittedText("text_weight", c.MaxWeight > 0 ? $"{c.Weight / 10f:0.0}/{c.MaxWeight / 10f:0.0}" : "");
-        _view.SetText("text_id_weight", "Weight");
-        _view.SetText("text_id_title", "INVENTORY");
+        var c = game.Character;
+        view.SetFittedText("text_gold", c.Gold.ToString("n0"));
+        view.SetFittedText("text_weight", c.MaxWeight > 0 ? $"{c.Weight / 10f:0.0}/{c.MaxWeight / 10f:0.0}" : "");
+        view.SetText("text_id_weight", "Weight");
+        view.SetText("text_id_title", "INVENTORY");
     }
 }

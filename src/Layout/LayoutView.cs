@@ -12,13 +12,13 @@ public partial class LayoutView : Control
     public LayoutNode Root { get; }
     public Control? DragHandle { get; private set; }
 
-    private readonly UiKit _kit;
-    private readonly List<(LayoutNode Node, Control Control)> _built = new();
-    private readonly Dictionary<LayoutNode, Control> _byNode = new();
+    private readonly UiKit kit;
+    private readonly List<(LayoutNode Node, Control Control)> built = new();
+    private readonly Dictionary<LayoutNode, Control> byNode = new();
 
     public LayoutView(UiKit kit, LayoutNode root)
     {
-        _kit = kit;
+        this.kit = kit;
         Root = root;
         Name = root.Id.Length > 0 ? root.Id : "layout";
         MouseFilter = MouseFilterEnum.Ignore;
@@ -43,7 +43,7 @@ public partial class LayoutView : Control
 
     public Control? Get(string id)
     {
-        foreach (var (n, c) in _built)
+        foreach (var (n, c) in built)
             if (n.Id == id) return c;
         return null;
     }
@@ -54,11 +54,11 @@ public partial class LayoutView : Control
 
     public T? Get<T>(LayoutNode scope, string id) where T : Control => Get(scope, id) as T;
 
-    public Control? ControlOf(LayoutNode node) => _byNode.TryGetValue(node, out var c) ? c : null;
+    public Control? ControlOf(LayoutNode node) => byNode.TryGetValue(node, out var c) ? c : null;
 
     public IEnumerable<(LayoutNode Node, Control Control)> Where(Func<LayoutNode, bool> pick)
     {
-        foreach (var pair in _built)
+        foreach (var pair in built)
             if (pick(pair.Node)) yield return pair;
     }
 
@@ -68,7 +68,7 @@ public partial class LayoutView : Control
     public void Hide(params string[] ids)
     {
         foreach (var id in ids)
-            foreach (var (n, c) in _built)
+            foreach (var (n, c) in built)
                 if (n.Id == id) c.Visible = false;
     }
 
@@ -81,7 +81,7 @@ public partial class LayoutView : Control
     public void FadeOut(params string[] ids)
     {
         foreach (var id in ids)
-            foreach (var (n, c) in _built)
+            foreach (var (n, c) in built)
                 if (n.Id == id) c.SelfModulate = Colors.Transparent;
     }
 
@@ -92,13 +92,13 @@ public partial class LayoutView : Control
 
     public void SetClippedText(string id, string text)
     {
-        foreach (var (n, c) in _built)
+        foreach (var (n, c) in built)
         {
             if (n.Id != id || c is not Label l) continue;
             l.AutowrapMode = TextServer.AutowrapMode.Off;
             l.ClipText = true;
             int size = UiKit.FontSize(n);
-            var font = _kit.FontFor(n);
+            var font = kit.FontFor(n);
             string shown = text;
             while (shown.Length > 1 && font.GetStringSize(shown + Ellipsis, HorizontalAlignment.Left, -1, size).X > n.W)
                 shown = shown[..^1];
@@ -114,13 +114,13 @@ public partial class LayoutView : Control
 
     public void SetTextAll(string id, string text)
     {
-        foreach (var (n, c) in _built)
+        foreach (var (n, c) in built)
             if (n.Id == id && c is Label l) l.Text = text;
     }
 
     public void SetFittedText(string id, string text)
     {
-        foreach (var (n, c) in _built)
+        foreach (var (n, c) in built)
             if (n.Id == id && c is Label l)
                 Fit(l, n, text);
     }
@@ -154,7 +154,7 @@ public partial class LayoutView : Control
         };
         label.SetAnchorsPreset(LayoutPreset.FullRect);
         label.AddThemeFontSizeOverride("font_size", fontSize);
-        label.AddThemeFontOverride("font", _kit.Regular);
+        label.AddThemeFontOverride("font", kit.Regular);
         label.AddThemeColorOverride("font_color", color);
         label.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.75f));
         label.AddThemeConstantOverride("shadow_offset_x", 1);
@@ -208,8 +208,8 @@ public partial class LayoutView : Control
         c.Size = node.SizeVec;
         if (node.Tooltip.Length > 0) c.TooltipText = node.Tooltip;
         parent.AddChild(c);
-        _built.Add((node, c));
-        _byNode[node] = c;
+        built.Add((node, c));
+        byNode[node] = c;
 
         if (node.Type is "base" or "static" or "list" or "scrollbar" or "trackbar" or "tree" or "node" or "image")
             foreach (var child in node.Children)
@@ -223,7 +223,7 @@ public partial class LayoutView : Control
     public AtlasTexture? Atlas(LayoutNode image)
     {
         if (image.Texture == null || image.SrcW <= 0 || image.SrcH <= 0) return null;
-        var tex = _kit.Texture(image.Texture);
+        var tex = kit.Texture(image.Texture);
         if (tex == null) return null;
         return new AtlasTexture
         {
@@ -273,7 +273,7 @@ public partial class LayoutView : Control
     public void Style(Label label, LayoutNode node)
     {
         label.AddThemeFontSizeOverride("font_size", UiKit.FontSize(node));
-        label.AddThemeFontOverride("font", _kit.FontFor(node));
+        label.AddThemeFontOverride("font", kit.FontFor(node));
         label.AddThemeColorOverride("font_color", node.Color);
         label.AddThemeColorOverride("font_shadow_color", new Color(0, 0, 0, 0.75f));
         label.AddThemeConstantOverride("shadow_offset_x", 1);
@@ -327,8 +327,8 @@ public partial class LayoutView : Control
                 caption.Size = text.SizeVec;
             }
             button.AddChild(caption);
-            _built.Add((text, caption));
-            _byNode[text] = caption;
+            built.Add((text, caption));
+            byNode[text] = caption;
         }
         return button;
     }
@@ -362,7 +362,7 @@ public partial class LayoutView : Control
         label.AutowrapMode = TextServer.AutowrapMode.Off;
         label.ClipText = true;
         int size = UiKit.FontSize(node);
-        var font = _kit.FontFor(node);
+        var font = kit.FontFor(node);
         while (size > MinFittedFontSize && font.GetStringSize(text, HorizontalAlignment.Left, -1, size).X > w - FitInset)
             size--;
         label.AddThemeFontSizeOverride("font_size", size);
@@ -423,17 +423,17 @@ public partial class LayoutView : Control
 
 public partial class AnimatedImage : Node
 {
-    private readonly TextureRect _target;
-    private readonly List<AtlasTexture?> _frames;
-    private readonly double _frameTime;
-    private double _clock;
-    private int _frame;
+    private readonly TextureRect target;
+    private readonly List<AtlasTexture?> frames;
+    private readonly double frameTime;
+    private double clock;
+    private int frame;
 
     private AnimatedImage(TextureRect target, List<AtlasTexture?> frames, float fps)
     {
-        _target = target;
-        _frames = frames;
-        _frameTime = fps > 0 ? 1.0 / fps : 1.0 / 30.0;
+        this.target = target;
+        this.frames = frames;
+        frameTime = fps > 0 ? 1.0 / fps : 1.0 / 30.0;
     }
 
     public static void Attach(TextureRect target, List<AtlasTexture?> frames, float fps)
@@ -444,10 +444,10 @@ public partial class AnimatedImage : Node
 
     public override void _Process(double delta)
     {
-        _clock += delta;
-        if (_clock < _frameTime) return;
-        _clock -= _frameTime;
-        _frame = (_frame + 1) % _frames.Count;
-        if (_frames[_frame] is { } tex) _target.Texture = tex;
+        clock += delta;
+        if (clock < frameTime) return;
+        clock -= frameTime;
+        frame = (frame + 1) % frames.Count;
+        if (frames[frame] is { } tex) target.Texture = tex;
     }
 }

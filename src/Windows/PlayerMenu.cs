@@ -22,24 +22,24 @@ public partial class PlayerMenu : Control
         ("btn_default05", "equipment"),
     };
 
-    private readonly PlayerMenuRequest _request;
-    private readonly LayoutView _view;
+    private readonly PlayerMenuRequest request;
+    private readonly LayoutView view;
 
     public PlayerMenu(PlayerMenuRequest request)
     {
-        _request = request;
+        this.request = request;
         var kit = Plugin.Kit;
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Stop;
         GuiInput += ev => { if (ev is InputEventMouseButton { Pressed: true }) request.Close(); };
 
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
-        AddChild(_view);
+        view = new LayoutView(kit, kit.Layout(LayoutName));
+        AddChild(view);
 
         var rows = request.Rows.ToDictionary(r => r.Key);
         foreach (var (button, key) in FixedRows)
         {
-            if (_view.Get<BaseButton>(button) is not { } b) continue;
+            if (view.Get<BaseButton>(button) is not { } b) continue;
             if (rows.Remove(key, out var row)) b.Pressed += row.Run;
             else b.Disabled = true;
         }
@@ -53,21 +53,21 @@ public partial class PlayerMenu : Control
             int index = i - first;
             if (index < 0)
             {
-                _view.Hide(button, image);
+                view.Hide(button, image);
                 continue;
             }
             var row = extra[index];
-            if (_view.Get<BaseButton>(button) is { } b)
+            if (view.Get<BaseButton>(button) is { } b)
             {
                 HideLabels(b);
-                _view.Caption(button, row.Caption, CaptionFontSize, CaptionColor);
+                view.Caption(button, row.Caption, CaptionFontSize, CaptionColor);
                 b.Pressed += row.Run;
             }
         }
-        if (_view.Get(HeadId) is { } head)
+        if (view.Get(HeadId) is { } head)
         {
             if (extra.Count == 0) head.Visible = false;
-            else if (_view.Get($"btn_dynamic{first:00}") is { } top) head.Position = new Vector2(head.Position.X, top.Position.Y - head.Size.Y);
+            else if (view.Get($"btn_dynamic{first:00}") is { } top) head.Position = new Vector2(head.Position.X, top.Position.Y - head.Size.Y);
         }
     }
 
@@ -85,8 +85,8 @@ public partial class PlayerMenu : Control
     private void Place()
     {
         var room = GetViewport().GetVisibleRect().Size;
-        var at = _request.Position;
-        _view.Position = new Vector2(Mathf.Clamp(at.X, 0, room.X - _view.Size.X), Mathf.Clamp(at.Y, 0, room.Y - _view.Size.Y)).Round();
+        var at = request.Position;
+        view.Position = new Vector2(Mathf.Clamp(at.X, 0, room.X - view.Size.X), Mathf.Clamp(at.Y, 0, room.Y - view.Size.Y)).Round();
     }
 
     public override void _Input(InputEvent ev)
@@ -94,7 +94,7 @@ public partial class PlayerMenu : Control
         if (ev is InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape })
         {
             GetViewport().SetInputAsHandled();
-            _request.Close();
+            request.Close();
         }
     }
 }

@@ -37,37 +37,37 @@ public partial class EquipViewWindow : Control
         ("Poison", "Text_RegistPoison", "Title_RegistPoison"),
     };
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly Dictionary<int, TextureRect> _icons = new();
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly Dictionary<int, TextureRect> icons = new();
 
     public EquipViewWindow(WindowHost host)
     {
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout);
+        view = new LayoutView(kit, layout);
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, TitleBarHeight)));
-        _view.OnPressed("btn_close", () => _game.EquipView.Close());
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
+        view.OnPressed("btn_close", () => game.EquipView.Close());
         if (layout.Find(EquipGroup) is { } equip)
             for (int slot = 0; slot < EquipCells; slot++)
-                Wire(_view.Get(equip, slot.ToString()), slot);
+                Wire(view.Get(equip, slot.ToString()), slot);
         if (layout.Find(LayeredGroup) is { } layered)
             foreach (var cell in layered.Children)
                 if (int.TryParse(cell.Id, out int position))
-                    Wire(_view.ControlOf(cell), EquipViewLayout.SlotOfCostumePosition(position));
-        _view.SetText("Title_Buff", ItemData.Text(BuffListText, "Buff List"));
+                    Wire(view.ControlOf(cell), EquipViewLayout.SlotOfCostumePosition(position));
+        view.SetText("Title_Buff", ItemData.Text(BuffListText, "Buff List"));
     }
 
     public override void _EnterTree()
     {
-        _game.EquipView.Changed += Refresh;
+        game.EquipView.Changed += Refresh;
         Refresh();
     }
 
-    public override void _ExitTree() => _game.EquipView.Changed -= Refresh;
+    public override void _ExitTree() => game.EquipView.Changed -= Refresh;
 
     private void Wire(Control? cell, int slot)
     {
@@ -81,33 +81,33 @@ public partial class EquipViewWindow : Control
         };
         cell.AddChild(icon);
         cell.MouseFilter = MouseFilterEnum.Stop;
-        cell.MouseEntered += () => _game.EquipView.ShowTooltip(slot);
-        cell.MouseExited += () => _game.EquipView.HideTooltip();
-        _icons[slot] = icon;
+        cell.MouseEntered += () => game.EquipView.ShowTooltip(slot);
+        cell.MouseExited += () => game.EquipView.HideTooltip();
+        icons[slot] = icon;
     }
 
     private void Refresh()
     {
-        var equip = _game.EquipView;
-        _view.SetText("Title_Regist", equip.ResistTitle);
-        _view.SetText("Text_Notice", equip.Note);
+        var equip = game.EquipView;
+        view.SetText("Title_Regist", equip.ResistTitle);
+        view.SetText("Text_Notice", equip.Note);
         var model = equip.View;
-        foreach (var icon in _icons.Values) icon.Texture = null;
-        if (_view.Get("nation_ka") is { } karus) karus.Visible = model?.Nation == KarusNation;
-        if (_view.Get("nation_el") is { } elmorad) elmorad.Visible = model != null && model.Nation != KarusNation;
-        _view.SetText("Text_Id", model?.Name ?? "");
-        if (model != null && _view.Get<Label>("Text_Id") is { } name) name.AddThemeColorOverride("font_color", model.NameColour);
-        _view.SetText("Text_Class", model?.Class ?? "");
+        foreach (var icon in icons.Values) icon.Texture = null;
+        if (view.Get("nation_ka") is { } karus) karus.Visible = model?.Nation == KarusNation;
+        if (view.Get("nation_el") is { } elmorad) elmorad.Visible = model != null && model.Nation != KarusNation;
+        view.SetText("Text_Id", model?.Name ?? "");
+        if (model != null && view.Get<Label>("Text_Id") is { } name) name.AddThemeColorOverride("font_color", model.NameColour);
+        view.SetText("Text_Class", model?.Class ?? "");
         var values = new Dictionary<string, GameEquipValue>();
         foreach (var value in model?.Values ?? System.Array.Empty<GameEquipValue>()) values[value.Key] = value;
         foreach (var (key, text, title) in Values)
         {
             bool known = values.TryGetValue(key, out var value);
-            _view.SetText(text, known ? value.Value : "");
-            if (known) _view.SetText(title, value.Caption);
+            view.SetText(text, known ? value.Value : "");
+            if (known) view.SetText(title, value.Caption);
         }
         if (model == null) return;
         foreach (var (slot, texture) in model.Items)
-            if (_icons.TryGetValue(slot, out var icon)) icon.Texture = texture;
+            if (icons.TryGetValue(slot, out var icon)) icon.Texture = texture;
     }
 }

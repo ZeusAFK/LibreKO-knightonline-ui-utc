@@ -16,70 +16,70 @@ public partial class TradeWindow : Control
     private const string TheirReady = "img_trade_other_down";
     private const string TheirWaiting = "img_trade_other_normal";
 
-    private readonly WindowHost _host;
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly List<ItemSlot> _bag = new();
-    private readonly List<ItemSlot> _mine = new();
-    private readonly List<ItemSlot> _theirs = new();
+    private readonly WindowHost host;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly List<ItemSlot> bag = new();
+    private readonly List<ItemSlot> mine = new();
+    private readonly List<ItemSlot> theirs = new();
 
     public TradeWindow(WindowHost host)
     {
-        _host = host;
+        this.host = host;
         var kit = Plugin.Kit;
-        _game = kit.Game;
+        game = kit.Game;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout);
+        view = new LayoutView(kit, layout);
         MouseFilter = MouseFilterEnum.Stop;
-        AddChild(_view);
-        host.SetDragHandle(_view.MakeDragHandle(new Rect2(0, 0, _view.Size.X, TitleBarHeight)));
-        _view.Hide("list_iteminfo", "btn_gold2");
-        foreach (var (node, control) in _view.Where(n => n.IsString && int.TryParse(n.Id, out _)))
+        AddChild(view);
+        host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
+        view.Hide("list_iteminfo", "btn_gold2");
+        foreach (var (node, control) in view.Where(n => n.IsString && int.TryParse(n.Id, out _)))
             control.Visible = false;
 
-        foreach (var (node, control) in _view.Where(n => n.IsArea && int.TryParse(n.Id, out _)).ToList())
+        foreach (var (node, control) in view.Where(n => n.IsArea && int.TryParse(n.Id, out _)).ToList())
         {
             int index = int.Parse(node.Id);
             if (node.Y >= BagTop && index < BagCells)
-                _bag.Add(Cell(control, InventoryConstants.InventoryStart + index, s => _game.Inventory.At(s), OfferFromBag,
-                    (s, over) => { if (over) _game.Inventory.ShowTooltip(s); else _game.Inventory.HideTooltip(); }));
+                bag.Add(Cell(control, InventoryConstants.InventoryStart + index, s => game.Inventory.At(s), OfferFromBag,
+                    (s, over) => { if (over) game.Inventory.ShowTooltip(s); else game.Inventory.HideTooltip(); }));
             else if (node.Y < BagTop && node.X < OfferSplitX)
-                _mine.Add(Cell(control, index, s => At(_game.Trade.Mine, s), null,
-                    (s, over) => { if (over) _game.Trade.ShowTooltip(true, s); else _game.Trade.HideTooltip(); }));
+                mine.Add(Cell(control, index, s => At(game.Trade.Mine, s), null,
+                    (s, over) => { if (over) game.Trade.ShowTooltip(true, s); else game.Trade.HideTooltip(); }));
             else if (node.Y < BagTop)
-                _theirs.Add(Cell(control, index, s => At(_game.Trade.Theirs, s), null,
-                    (s, over) => { if (over) _game.Trade.ShowTooltip(false, s); else _game.Trade.HideTooltip(); }));
+                theirs.Add(Cell(control, index, s => At(game.Trade.Theirs, s), null,
+                    (s, over) => { if (over) game.Trade.ShowTooltip(false, s); else game.Trade.HideTooltip(); }));
         }
-        _mine.Sort((a, b) => a.Slot.CompareTo(b.Slot));
-        _theirs.Sort((a, b) => a.Slot.CompareTo(b.Slot));
+        mine.Sort((a, b) => a.Slot.CompareTo(b.Slot));
+        theirs.Sort((a, b) => a.Slot.CompareTo(b.Slot));
 
-        if (_view.Get("area_my") is { } dropArea)
+        if (view.Get("area_my") is { } dropArea)
         {
-            var drop = new DropTarget { Position = dropArea.Position, Size = dropArea.Size, OnDrop = from => _game.Trade.Offer(from) };
+            var drop = new DropTarget { Position = dropArea.Position, Size = dropArea.Size, OnDrop = from => game.Trade.Offer(from) };
             dropArea.GetParent().AddChild(drop);
             dropArea.GetParent().MoveChild(drop, 0);
         }
 
-        _view.OnPressed("btn_close", () => _game.Trade.Cancel());
-        _view.OnPressed("btn_gold", () => _game.Trade.AskGold());
-        _view.OnPressed("btn_trade_my", () => _game.Trade.Confirm());
-        if (_view.Get("btn_gold") is { } gold) gold.TooltipText = "Offer gold";
-        if (_view.Get("btn_trade_my") is { } confirm) confirm.TooltipText = "Confirm the trade";
+        view.OnPressed("btn_close", () => game.Trade.Cancel());
+        view.OnPressed("btn_gold", () => game.Trade.AskGold());
+        view.OnPressed("btn_trade_my", () => game.Trade.Confirm());
+        if (view.Get("btn_gold") is { } gold) gold.TooltipText = "Offer gold";
+        if (view.Get("btn_trade_my") is { } confirm) confirm.TooltipText = "Confirm the trade";
     }
 
     public override void _EnterTree()
     {
-        _game.Trade.Changed += Refresh;
-        _game.Inventory.Changed += Refresh;
-        _game.Character.Changed += Refresh;
+        game.Trade.Changed += Refresh;
+        game.Inventory.Changed += Refresh;
+        game.Character.Changed += Refresh;
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        _game.Trade.Changed -= Refresh;
-        _game.Inventory.Changed -= Refresh;
-        _game.Character.Changed -= Refresh;
+        game.Trade.Changed -= Refresh;
+        game.Inventory.Changed -= Refresh;
+        game.Character.Changed -= Refresh;
     }
 
     private ItemSlot Cell(Control area, int slot, Func<int, GameItem> source, Action<int>? activate, Action<int, bool> hover)
@@ -102,22 +102,22 @@ public partial class TradeWindow : Control
 
     private void OfferFromBag(int slot)
     {
-        if (!_game.Inventory.At(slot).IsEmpty) _game.Trade.Offer(slot);
+        if (!game.Inventory.At(slot).IsEmpty) game.Trade.Offer(slot);
     }
 
     private void Refresh()
     {
-        var trade = _game.Trade;
-        foreach (var cell in _bag) cell.Refresh();
-        foreach (var cell in _mine) cell.Refresh();
-        foreach (var cell in _theirs) cell.Refresh();
-        _view.SetText("text_id_my", _game.Character.Name);
-        _view.SetText("text_id_other", trade.Partner);
-        _view.SetText("string_money_my", trade.MyGold.ToString("n0"));
-        _view.SetText("string_money_other", trade.TheirGold.ToString("n0"));
-        _view.SetText("string_money_inv", _game.Character.Gold.ToString("n0"));
-        if (_view.Get(TheirReady) is { } ready) ready.Visible = trade.TheirConfirmed;
-        if (_view.Get(TheirWaiting) is { } waiting) waiting.Visible = !trade.TheirConfirmed;
-        if (_view.Get<BaseButton>("btn_trade_my") is { } confirm) confirm.Disabled = trade.MyConfirmed;
+        var trade = game.Trade;
+        foreach (var cell in bag) cell.Refresh();
+        foreach (var cell in mine) cell.Refresh();
+        foreach (var cell in theirs) cell.Refresh();
+        view.SetText("text_id_my", game.Character.Name);
+        view.SetText("text_id_other", trade.Partner);
+        view.SetText("string_money_my", trade.MyGold.ToString("n0"));
+        view.SetText("string_money_other", trade.TheirGold.ToString("n0"));
+        view.SetText("string_money_inv", game.Character.Gold.ToString("n0"));
+        if (view.Get(TheirReady) is { } ready) ready.Visible = trade.TheirConfirmed;
+        if (view.Get(TheirWaiting) is { } waiting) waiting.Visible = !trade.TheirConfirmed;
+        if (view.Get<BaseButton>("btn_trade_my") is { } confirm) confirm.Disabled = trade.MyConfirmed;
     }
 }

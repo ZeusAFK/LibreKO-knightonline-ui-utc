@@ -32,56 +32,56 @@ public partial class HotkeyBar : Control
         public readonly List<HotSlot> Slots = new();
     }
 
-    private readonly UiKit _kit;
-    private readonly PluginGame _game;
-    private readonly PluginSettings _settings;
-    private readonly LayoutNode _layout;
-    private readonly LayoutNode _hGroup;
-    private readonly LayoutNode _vGroup;
-    private readonly List<Strip> _strips = new();
-    private readonly List<int> _extraPages = new();
-    private readonly List<TextureButton> _lockButtons = new();
-    private readonly Control _grip;
-    private bool _vertical;
-    private float _mainTop;
-    private HudLayout? _hudLayout;
+    private readonly UiKit kit;
+    private readonly PluginGame game;
+    private readonly PluginSettings settings;
+    private readonly LayoutNode layout;
+    private readonly LayoutNode hGroup;
+    private readonly LayoutNode vGroup;
+    private readonly List<Strip> strips = new();
+    private readonly List<int> extraPages = new();
+    private readonly List<TextureButton> lockButtons = new();
+    private readonly Control grip;
+    private bool vertical;
+    private float mainTop;
+    private HudLayout? hudLayout;
 
     public HotkeyBar()
     {
-        _kit = Plugin.Kit;
-        _game = _kit.Game;
-        _settings = _kit.Context.Settings;
-        _layout = _kit.Layout(LayoutName);
-        _hGroup = _layout.Find(HorizontalGroup) ?? _layout;
-        _vGroup = _layout.Find(VerticalGroup) ?? _layout;
-        _vertical = _settings.GetBool(SettingVertical, false);
-        foreach (var part in _settings.Get(SettingExtraPages).Split(',', StringSplitOptions.RemoveEmptyEntries))
-            if (int.TryParse(part, out int page) && _extraPages.Count < MaxBars - 1) _extraPages.Add(page);
+        kit = Plugin.Kit;
+        game = kit.Game;
+        settings = kit.Context.Settings;
+        layout = kit.Layout(LayoutName);
+        hGroup = layout.Find(HorizontalGroup) ?? layout;
+        vGroup = layout.Find(VerticalGroup) ?? layout;
+        vertical = settings.GetBool(SettingVertical, false);
+        foreach (var part in settings.Get(SettingExtraPages).Split(',', StringSplitOptions.RemoveEmptyEntries))
+            if (int.TryParse(part, out int page) && extraPages.Count < MaxBars - 1) extraPages.Add(page);
         MouseFilter = MouseFilterEnum.Ignore;
-        _grip = new Control { Name = "grip", MouseFilter = MouseFilterEnum.Stop };
-        AddChild(_grip);
+        grip = new Control { Name = "grip", MouseFilter = MouseFilterEnum.Stop };
+        AddChild(grip);
         Build();
     }
 
     public override void _EnterTree()
     {
-        _game.Hotbar.Changed += Refresh;
-        _game.Hotbar.Ready += FlashReady;
-        _game.BecameAvailable += Refresh;
-        _hudLayout ??= HudLayout.Attach(this, LayoutId, _grip, DefaultPosition);
+        game.Hotbar.Changed += Refresh;
+        game.Hotbar.Ready += FlashReady;
+        game.BecameAvailable += Refresh;
+        hudLayout ??= HudLayout.Attach(this, LayoutId, grip, DefaultPosition);
         Refresh();
     }
 
     public override void _ExitTree()
     {
-        _game.Hotbar.Changed -= Refresh;
-        _game.Hotbar.Ready -= FlashReady;
-        _game.BecameAvailable -= Refresh;
+        game.Hotbar.Changed -= Refresh;
+        game.Hotbar.Ready -= FlashReady;
+        game.BecameAvailable -= Refresh;
     }
 
     public override void _Process(double delta)
     {
-        foreach (var strip in _strips)
+        foreach (var strip in strips)
             foreach (var slot in strip.Slots)
                 slot.TickCooldown();
     }
@@ -89,54 +89,54 @@ public partial class HotkeyBar : Control
     private Vector2 DefaultPosition()
     {
         var room = GetViewport().GetVisibleRect().Size;
-        return _vertical
+        return vertical
             ? ColumnsAt
             : new Vector2(Mathf.Round((room.X - Size.X) * 0.5f), room.Y - BottomBarHeight - Size.Y - GapAboveBar);
     }
 
     private void Build()
     {
-        foreach (var strip in _strips) strip.View.QueueFree();
-        _strips.Clear();
-        _lockButtons.Clear();
-        var group = _vertical ? _vGroup : _hGroup;
-        int extras = _extraPages.Count;
-        float previousMainTop = _mainTop;
-        _mainTop = _vertical ? 0f : extras * group.H;
-        AddStrip(group, _vertical ? Vector2.Zero : new Vector2(0, _mainTop), () => _game.Hotbar.Page, _vertical ? 0 : HorizontalSlotIdBase, extra: -1);
+        foreach (var strip in strips) strip.View.QueueFree();
+        strips.Clear();
+        lockButtons.Clear();
+        var group = vertical ? vGroup : hGroup;
+        int extras = extraPages.Count;
+        float previousMainTop = mainTop;
+        mainTop = vertical ? 0f : extras * group.H;
+        AddStrip(group, vertical ? Vector2.Zero : new Vector2(0, mainTop), () => game.Hotbar.Page, vertical ? 0 : HorizontalSlotIdBase, extra: -1);
         for (int i = 0; i < extras; i++)
         {
             int index = i;
-            var at = _vertical ? new Vector2((i + 1) * group.W, 0) : new Vector2(0, (extras - 1 - i) * group.H);
-            AddStrip(group, at, () => _extraPages[index], _vertical ? 0 : HorizontalSlotIdBase, extra: index);
+            var at = vertical ? new Vector2((i + 1) * group.W, 0) : new Vector2(0, (extras - 1 - i) * group.H);
+            AddStrip(group, at, () => extraPages[index], vertical ? 0 : HorizontalSlotIdBase, extra: index);
         }
-        Size = _vertical ? new Vector2((extras + 1) * group.W, group.H) : new Vector2(group.W, (extras + 1) * group.H);
+        Size = vertical ? new Vector2((extras + 1) * group.W, group.H) : new Vector2(group.W, (extras + 1) * group.H);
         if (IsInsideTree())
         {
             if (!Config.HasWindowPos(LayoutId)) Position = DefaultPosition();
-            else Position += new Vector2(0, previousMainTop - _mainTop);
+            else Position += new Vector2(0, previousMainTop - mainTop);
             var room = GetViewport().GetVisibleRect().Size;
             Position = new Vector2(Mathf.Clamp(Position.X, 0f, Mathf.Max(0f, room.X - Size.X)),
                 Mathf.Clamp(Position.Y, 0f, Mathf.Max(0f, room.Y - Size.Y)));
         }
         Refresh();
-        _settings.SetBool(SettingVertical, _vertical);
-        _settings.Set(SettingExtraPages, string.Join(",", _extraPages));
+        settings.SetBool(SettingVertical, vertical);
+        settings.Set(SettingExtraPages, string.Join(",", extraPages));
     }
 
     private Rect2 GripRect(LayoutNode group)
     {
-        if (group == _hGroup && _layout.HasDrag)
-            return new Rect2(_layout.DragX - group.X, _layout.DragY - group.Y, _layout.DragW, _layout.DragH);
+        if (group == hGroup && layout.HasDrag)
+            return new Rect2(layout.DragX - group.X, layout.DragY - group.Y, layout.DragW, layout.DragH);
         var handle = group.Images.FirstOrDefault(i => i.Id.Length == 0) ?? group;
         return new Rect2(handle.X - group.X, handle.Y - group.Y, handle.W, handle.H);
     }
 
     private void AddStrip(LayoutNode group, Vector2 at, Func<int> pageOf, int slotIdBase, int extra)
     {
-        var view = new LayoutView(_kit, _layout);
-        view.Hide(group == _hGroup ? VerticalGroup : HorizontalGroup);
-        view.Position = at - new Vector2(group.X - _layout.X, group.Y - _layout.Y);
+        var view = new LayoutView(kit, layout);
+        view.Hide(group == hGroup ? VerticalGroup : HorizontalGroup);
+        view.Position = at - new Vector2(group.X - layout.X, group.Y - layout.Y);
         AddChild(view);
         var strip = new Strip { View = view, PageOf = pageOf };
 
@@ -154,18 +154,18 @@ public partial class HotkeyBar : Control
             relay.GuiInput += ev =>
             {
                 if (ev is not InputEventMouseButton { ButtonIndex: MouseButton.Left } press) return;
-                _grip.EmitSignal(Control.SignalName.GuiInput, press);
+                grip.EmitSignal(Control.SignalName.GuiInput, press);
                 relay.AcceptEvent();
             };
             groupControl.AddChild(relay);
             groupControl.MoveChild(relay, 0);
         }
 
-        string pageId = group == _hGroup ? "strpage1" : "strpage0";
+        string pageId = group == hGroup ? "strpage1" : "strpage0";
         if (group.Find(pageId) is { } pageNode && view.ControlOf(pageNode) is { } pageLabel)
         {
             pageLabel.Visible = false;
-            strip.PageNumber = new DrawnText(_kit.FontFor(pageNode), UiKit.FontSize(pageNode), pageNode.Color)
+            strip.PageNumber = new DrawnText(kit.FontFor(pageNode), UiKit.FontSize(pageNode), pageNode.Color)
             {
                 Position = pageLabel.Position - new Vector2(PageNumberPad, 0),
                 Size = pageNode.SizeVec + new Vector2(2 * PageNumberPad, 0),
@@ -173,7 +173,7 @@ public partial class HotkeyBar : Control
             pageLabel.GetParent().AddChild(strip.PageNumber);
         }
 
-        int perPage = _game.Hotbar.SlotsPerPage;
+        int perPage = game.Hotbar.SlotsPerPage;
         foreach (var node in group.All())
         {
             if (!node.IsArea || node.AreaType != SlotAreaType || !int.TryParse(node.Id, out int id)) continue;
@@ -185,30 +185,30 @@ public partial class HotkeyBar : Control
                 Position = control.Position,
                 Size = control.Size,
                 AbsOf = s => pageOf() * perPage + s,
-                Source = abs => _game.Hotbar.Slot(abs),
-                OnActivate = abs => _game.Hotbar.ActivateAbs(abs),
-                OnDrop = (abs, itemId, from) => _game.Hotbar.Drop(abs, itemId, from),
-                OnClear = abs => _game.Hotbar.Clear(abs),
-                OnSelect = abs => _game.Hotbar.Select(abs),
-                SelectedAbs = () => _game.Hotbar.Selected,
-                Locked = () => _game.Hotbar.Locked,
-                OnHover = (abs, over) => { if (over) _game.Hotbar.ShowTooltip(abs); else _game.Hotbar.HideTooltip(); },
+                Source = abs => game.Hotbar.Slot(abs),
+                OnActivate = abs => game.Hotbar.ActivateAbs(abs),
+                OnDrop = (abs, itemId, from) => game.Hotbar.Drop(abs, itemId, from),
+                OnClear = abs => game.Hotbar.Clear(abs),
+                OnSelect = abs => game.Hotbar.Select(abs),
+                SelectedAbs = () => game.Hotbar.Selected,
+                Locked = () => game.Hotbar.Locked,
+                OnHover = (abs, over) => { if (over) game.Hotbar.ShowTooltip(abs); else game.Hotbar.HideTooltip(); },
             };
             control.GetParent().AddChild(cell);
             strip.Slots.Add(cell);
         }
         if (view.Get(group, SlotNumbers) is { } numbers) numbers.GetParent().MoveChild(numbers, -1);
 
-        string expand = group == _hGroup ? CollapseButton : ExpandButton;
-        string collapse = group == _hGroup ? ExpandButton : CollapseButton;
+        string expand = group == hGroup ? CollapseButton : ExpandButton;
+        string collapse = group == hGroup ? ExpandButton : CollapseButton;
         if (extra < 0)
         {
-            view.OnPressed(group, "btn_up", () => _game.Hotbar.ChangePage(-1));
-            view.OnPressed(group, "btn_down", () => _game.Hotbar.ChangePage(1));
+            view.OnPressed(group, "btn_up", () => game.Hotbar.ChangePage(-1));
+            view.OnPressed(group, "btn_down", () => game.Hotbar.ChangePage(1));
             view.OnPressed(group, expand, AddBar);
             view.OnPressed(group, "btn_change", ToggleOrientation);
             view.Hide(group, collapse);
-            if (_extraPages.Count >= MaxBars - 1) view.Hide(group, expand);
+            if (extraPages.Count >= MaxBars - 1) view.Hide(group, expand);
         }
         else
         {
@@ -217,56 +217,56 @@ public partial class HotkeyBar : Control
             view.OnPressed(group, collapse, () => RemoveBar(extra));
             view.Hide(group, expand, "btn_change");
         }
-        view.OnPressed(group, "btn_lock", () => _game.Hotbar.SetLocked(!_game.Hotbar.Locked));
+        view.OnPressed(group, "btn_lock", () => game.Hotbar.SetLocked(!game.Hotbar.Locked));
         if (view.Get<TextureButton>(group, "btn_lock") is { } lockButton)
         {
             lockButton.ToggleMode = true;
-            _lockButtons.Add(lockButton);
+            lockButtons.Add(lockButton);
         }
-        _strips.Add(strip);
+        strips.Add(strip);
     }
 
     private void AddBar()
     {
-        if (_extraPages.Count >= MaxBars - 1) return;
-        int last = _extraPages.Count > 0 ? _extraPages[^1] : _game.Hotbar.Page;
-        _extraPages.Add((last + 1) % _game.Hotbar.Pages);
+        if (extraPages.Count >= MaxBars - 1) return;
+        int last = extraPages.Count > 0 ? extraPages[^1] : game.Hotbar.Page;
+        extraPages.Add((last + 1) % game.Hotbar.Pages);
         Build();
     }
 
     private void RemoveBar(int index)
     {
-        if (index < 0 || index >= _extraPages.Count) return;
-        _extraPages.RemoveAt(index);
+        if (index < 0 || index >= extraPages.Count) return;
+        extraPages.RemoveAt(index);
         Build();
     }
 
     private void TurnExtra(int index, int delta)
     {
-        int pages = _game.Hotbar.Pages;
-        _extraPages[index] = ((_extraPages[index] + delta) % pages + pages) % pages;
-        _settings.Set(SettingExtraPages, string.Join(",", _extraPages));
+        int pages = game.Hotbar.Pages;
+        extraPages[index] = ((extraPages[index] + delta) % pages + pages) % pages;
+        settings.Set(SettingExtraPages, string.Join(",", extraPages));
         Refresh();
     }
 
     private void ToggleOrientation()
     {
-        _vertical = !_vertical;
+        vertical = !vertical;
         Build();
     }
 
     private void FlashReady(IReadOnlyList<int> skillIds)
     {
-        foreach (var strip in _strips)
+        foreach (var strip in strips)
             foreach (var slot in strip.Slots)
                 if (skillIds.Contains(slot.ShownId)) slot.Flash();
     }
 
     private void Refresh()
     {
-        foreach (var button in _lockButtons)
-            if (IsInstanceValid(button)) button.SetPressedNoSignal(!_game.Hotbar.Locked);
-        foreach (var strip in _strips)
+        foreach (var button in lockButtons)
+            if (IsInstanceValid(button)) button.SetPressedNoSignal(!game.Hotbar.Locked);
+        foreach (var strip in strips)
         {
             foreach (var slot in strip.Slots) slot.Refresh();
             if (strip.PageNumber != null) strip.PageNumber.Text = (strip.PageOf() + 1).ToString();
@@ -294,74 +294,74 @@ public partial class HotSlot : Control
     public Func<int> SelectedAbs { get; set; } = () => -1;
     public Func<bool> Locked { get; set; } = () => false;
 
-    private readonly TextureRect _icon;
-    private readonly HotSlotOverlay _overlay;
-    private readonly Label _count;
-    private HotSlotInfo _current;
-    private bool _pressed;
-    private bool _dragging;
+    private readonly TextureRect icon;
+    private readonly HotSlotOverlay overlay;
+    private readonly Label count;
+    private HotSlotInfo current;
+    private bool pressed;
+    private bool dragging;
 
     private int Abs => AbsOf(SlotInPage);
 
-    public int ShownId => _current.Id;
+    public int ShownId => current.Id;
 
     public HotSlot(int slotInPage)
     {
         SlotInPage = slotInPage;
         MouseFilter = MouseFilterEnum.Stop;
-        _icon = new TextureRect
+        icon = new TextureRect
         {
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.Scale,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _icon.SetAnchorsPreset(LayoutPreset.FullRect);
-        AddChild(_icon);
-        _overlay = new HotSlotOverlay();
-        AddChild(_overlay);
-        _count = new Label
+        icon.SetAnchorsPreset(LayoutPreset.FullRect);
+        AddChild(icon);
+        overlay = new HotSlotOverlay();
+        AddChild(overlay);
+        count = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _count.SetAnchorsPreset(LayoutPreset.FullRect);
-        _count.OffsetRight = -CountInset;
-        _count.OffsetBottom = -CountInset;
-        _count.AddThemeFontSizeOverride("font_size", CountFontSize);
-        _count.AddThemeColorOverride("font_color", Colors.White);
-        _count.AddThemeColorOverride("font_outline_color", Colors.Black);
-        _count.AddThemeConstantOverride("outline_size", CountOutline);
-        AddChild(_count);
-        MouseEntered += () => { if (!_current.IsEmpty) OnHover?.Invoke(Abs, true); };
+        count.SetAnchorsPreset(LayoutPreset.FullRect);
+        count.OffsetRight = -CountInset;
+        count.OffsetBottom = -CountInset;
+        count.AddThemeFontSizeOverride("font_size", CountFontSize);
+        count.AddThemeColorOverride("font_color", Colors.White);
+        count.AddThemeColorOverride("font_outline_color", Colors.Black);
+        count.AddThemeConstantOverride("outline_size", CountOutline);
+        AddChild(count);
+        MouseEntered += () => { if (!current.IsEmpty) OnHover?.Invoke(Abs, true); };
         MouseExited += () => OnHover?.Invoke(Abs, false);
     }
 
     public void Refresh()
     {
-        _current = Source(Abs);
-        _icon.Texture = _current.IsEmpty ? null : _current.Icon;
-        _icon.Modulate = _current.Enough ? Colors.White : MissingTint;
-        _count.Text = _current.Count >= 0 ? _current.Count.ToString() : "";
-        TooltipText = _current.Tooltip.Length > 0 ? _current.Tooltip : _current.Name;
-        _overlay.Selected = !_current.IsEmpty && SelectedAbs() == Abs;
+        current = Source(Abs);
+        icon.Texture = current.IsEmpty ? null : current.Icon;
+        icon.Modulate = current.Enough ? Colors.White : MissingTint;
+        count.Text = current.Count >= 0 ? current.Count.ToString() : "";
+        TooltipText = current.Tooltip.Length > 0 ? current.Tooltip : current.Name;
+        overlay.Selected = !current.IsEmpty && SelectedAbs() == Abs;
         TickCooldown();
     }
 
-    public void Flash() => _overlay.Flash();
+    public void Flash() => overlay.Flash();
 
     public void TickCooldown()
     {
-        if (_current.IsEmpty) { _overlay.Remain = 0f; return; }
+        if (current.IsEmpty) { overlay.Remain = 0f; return; }
         var live = Source(Abs);
-        if (live.Id != _current.Id) { Refresh(); return; }
-        if (live.Count != _current.Count || live.Enough != _current.Enough)
+        if (live.Id != current.Id) { Refresh(); return; }
+        if (live.Count != current.Count || live.Enough != current.Enough)
         {
-            _current = live;
-            _icon.Modulate = live.Enough ? Colors.White : MissingTint;
-            _count.Text = live.Count >= 0 ? live.Count.ToString() : "";
+            current = live;
+            icon.Modulate = live.Enough ? Colors.White : MissingTint;
+            count.Text = live.Count >= 0 ? live.Count.ToString() : "";
         }
-        _overlay.Remain = live.Cooldown;
+        overlay.Remain = live.Cooldown;
     }
 
     public override void _GuiInput(InputEvent ev)
@@ -374,8 +374,8 @@ public partial class HotSlot : Control
             return;
         }
         if (mb.ButtonIndex != MouseButton.Left) return;
-        if (mb.Pressed) _pressed = true;
-        else if (_pressed) { _pressed = false; OnActivate?.Invoke(Abs); }
+        if (mb.Pressed) pressed = true;
+        else if (pressed) { pressed = false; OnActivate?.Invoke(Abs); }
         AcceptEvent();
     }
 
@@ -384,30 +384,30 @@ public partial class HotSlot : Control
         switch ((long)what)
         {
             case NotificationDragEnd:
-                if (!_dragging) return;
-                _dragging = false;
+                if (!dragging) return;
+                dragging = false;
                 if (!IsDragSuccessful()) OnClear?.Invoke(Abs);
                 return;
             case NotificationMouseExit:
-                _pressed = false;
+                pressed = false;
                 return;
         }
     }
 
     public override Variant _GetDragData(Vector2 atPosition)
     {
-        if (_current.IsEmpty || Locked()) return default;
-        _pressed = false;
-        _dragging = true;
+        if (current.IsEmpty || Locked()) return default;
+        pressed = false;
+        dragging = true;
         var preview = new TextureRect
         {
-            Texture = _current.Icon,
+            Texture = current.Icon,
             CustomMinimumSize = Size,
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered,
         };
         SetDragPreview(preview);
-        return new Godot.Collections.Dictionary { { DragKeyItem, _current.Id }, { DragKeyBar, _current.Abs } };
+        return new Godot.Collections.Dictionary { { DragKeyItem, current.Id }, { DragKeyBar, current.Abs } };
     }
 
     public override bool _CanDropData(Vector2 atPosition, Variant data) =>

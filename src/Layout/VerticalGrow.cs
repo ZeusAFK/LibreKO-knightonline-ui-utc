@@ -8,29 +8,29 @@ public sealed class VerticalGrow
 
     public const float BottomBand = 30f;
 
-    private readonly List<(Control Control, Vector2 Position, Vector2 Size, Mode Mode)> _parts = new();
-    private readonly HashSet<Control> _placed = new();
+    private readonly List<(Control Control, Vector2 Position, Vector2 Size, Mode Mode)> parts = new();
+    private readonly HashSet<Control> placed = new();
 
     public void Add(Control control, Mode mode)
     {
         if (mode == Mode.Stay) return;
-        _parts.Add((control, control.Position, control.Size, mode));
-        _placed.Add(control);
+        parts.Add((control, control.Position, control.Size, mode));
+        placed.Add(control);
     }
 
     public void ShiftBottomBand(Control parent)
     {
         float edge = parent.Size.Y - BottomBand;
         foreach (var child in parent.GetChildren().OfType<Control>())
-            if (!_placed.Contains(child) && child.Position.Y >= edge)
+            if (!placed.Contains(child) && child.Position.Y >= edge)
                 Add(child, Mode.Shift);
     }
 
-    public IEnumerable<Control> Stretched => _parts.Where(p => p.Mode == Mode.Stretch).Select(p => p.Control).ToList();
+    public IEnumerable<Control> Stretched => parts.Where(p => p.Mode == Mode.Stretch).Select(p => p.Control).ToList();
 
     public void Apply(float extra)
     {
-        foreach (var (control, position, size, mode) in _parts)
+        foreach (var (control, position, size, mode) in parts)
         {
             if (!GodotObject.IsInstanceValid(control)) continue;
             if (mode == Mode.Shift)

@@ -19,9 +19,9 @@ public sealed class UiKit
     public int LayoutCount { get; }
     public int TextureCount { get; }
 
-    private readonly Dictionary<string, LayoutNode> _layouts = new(StringComparer.OrdinalIgnoreCase);
-    private Font? _regular;
-    private Font? _bold;
+    private readonly Dictionary<string, LayoutNode> layouts = new(StringComparer.OrdinalIgnoreCase);
+    private Font? regular;
+    private Font? bold;
 
     public UiKit(PluginContext context)
     {
@@ -30,26 +30,26 @@ public sealed class UiKit
         if (index != null)
         {
             var root = index.RootElement;
-            if (root.TryGetProperty("layouts", out var layouts)) LayoutCount = layouts.EnumerateObject().Count();
+            if (root.TryGetProperty("layouts", out var layoutsJson)) LayoutCount = layoutsJson.EnumerateObject().Count();
             if (root.TryGetProperty("textures", out var textures)) TextureCount = textures.EnumerateObject().Count();
         }
     }
 
     public LayoutNode Layout(string name)
     {
-        if (_layouts.TryGetValue(name, out var cached)) return cached;
+        if (layouts.TryGetValue(name, out var cached)) return cached;
         using var doc = Context.Assets.Json($"{LayoutDir}/{name}.json")
                         ?? throw new FileNotFoundException($"layout {name} is missing from {LayoutDir}");
         var node = LayoutNode.Parse(doc.RootElement);
-        _layouts[name] = node;
+        layouts[name] = node;
         return node;
     }
 
     public Texture2D? Texture(string png) => Context.Assets.Texture($"{TextureDir}/{png}");
 
-    public Font Regular => _regular ??= ThemeDB.FallbackFont;
+    public Font Regular => regular ??= ThemeDB.FallbackFont;
 
-    public Font Bold => _bold ??= new FontVariation { BaseFont = Regular, VariationEmbolden = BoldStrength };
+    public Font Bold => bold ??= new FontVariation { BaseFont = Regular, VariationEmbolden = BoldStrength };
 
     public Font FontFor(LayoutNode node) => node.Bold ? Bold : Regular;
 

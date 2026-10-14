@@ -36,32 +36,32 @@ public partial class TaskbarMenu : Control
         ("btn_partywanted", "seek_party"),
     };
 
-    private readonly PluginGame _game;
-    private readonly LayoutView _view;
-    private readonly Control _opener;
+    private readonly PluginGame game;
+    private readonly LayoutView view;
+    private readonly Control opener;
 
     public TaskbarMenu(Control opener)
     {
-        _opener = opener;
+        this.opener = opener;
         var kit = Plugin.Kit;
-        _game = kit.Game;
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
+        game = kit.Game;
+        view = new LayoutView(kit, kit.Layout(LayoutName));
         MouseFilter = MouseFilterEnum.Ignore;
         TopLevel = true;
-        Size = _view.Size;
-        AddChild(_view);
+        Size = view.Size;
+        AddChild(view);
         Visible = false;
 
         foreach (var (button, action) in ActionRows)
-            _view.OnPressed(button, () => Run(() => _game.Commands.Run(action)));
+            view.OnPressed(button, () => Run(() => game.Commands.Run(action)));
         foreach (var (button, window) in WindowRows)
-            _view.OnPressed(button, () => Run(() => _game.Windows.Toggle(window)));
-        _view.OnPressed("btn_trade", () => Run(_game.Commands.TradeWithTarget));
-        _view.OnPressed("btn_party", () => Run(_game.Commands.InviteTarget));
-        _view.OnPressed("btn_option", () => Run(() => SettingsPanel.Open(GetTree().Root)));
-        _view.OnPressed("btn_exit", () => Run(_game.Commands.ShowExitMenu));
+            view.OnPressed(button, () => Run(() => game.Windows.Toggle(window)));
+        view.OnPressed("btn_trade", () => Run(game.Commands.TradeWithTarget));
+        view.OnPressed("btn_party", () => Run(game.Commands.InviteTarget));
+        view.OnPressed("btn_option", () => Run(() => SettingsPanel.Open(GetTree().Root)));
+        view.OnPressed("btn_exit", () => Run(game.Commands.ShowExitMenu));
         foreach (var id in Unavailable)
-            if (_view.Get<BaseButton>(id) is { } off)
+            if (view.Get<BaseButton>(id) is { } off)
             {
                 off.Disabled = true;
                 off.TooltipText = UnavailableTip;
@@ -71,11 +71,11 @@ public partial class TaskbarMenu : Control
     public void Toggle()
     {
         if (Visible) { Visible = false; return; }
-        bool karus = _game.Character.Nation == KarusNation;
-        if (_view.Get(KarusQuests) is { } seed) seed.Visible = karus;
-        if (_view.Get(ElMoradQuests) is { } michelle) michelle.Visible = !karus;
+        bool karus = game.Character.Nation == KarusNation;
+        if (view.Get(KarusQuests) is { } seed) seed.Visible = karus;
+        if (view.Get(ElMoradQuests) is { } michelle) michelle.Visible = !karus;
         var room = GetViewport().GetVisibleRect().Size;
-        var button = _opener.GetGlobalRect();
+        var button = opener.GetGlobalRect();
         GlobalPosition = new Vector2(Mathf.Clamp(button.Position.X, 0f, room.X - Size.X),
             Mathf.Clamp(button.Position.Y - Size.Y, 0f, room.Y - Size.Y)).Round();
         Visible = true;
@@ -98,7 +98,7 @@ public partial class TaskbarMenu : Control
         }
         if (ev is InputEventMouseButton { Pressed: true } click
             && !GetGlobalRect().HasPoint(click.GlobalPosition)
-            && !_opener.GetGlobalRect().HasPoint(click.GlobalPosition))
+            && !opener.GetGlobalRect().HasPoint(click.GlobalPosition))
             Visible = false;
     }
 }

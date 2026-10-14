@@ -16,13 +16,13 @@ public partial class TextBox : Control
     private const float MessageGapAboveEdit = 6f;
     private static readonly Color Dim = new(0, 0, 0, 0.45f);
 
-    private readonly TextRequest _request;
-    private readonly LayoutView _view;
-    private readonly LineEdit? _edit;
+    private readonly TextRequest request;
+    private readonly LayoutView view;
+    private readonly LineEdit? edit;
 
     public TextBox(TextRequest request)
     {
-        _request = request;
+        this.request = request;
         var kit = Plugin.Kit;
         SetAnchorsPreset(LayoutPreset.FullRect);
         MouseFilter = MouseFilterEnum.Stop;
@@ -31,37 +31,37 @@ public partial class TextBox : Control
         blocker.SetAnchorsPreset(LayoutPreset.FullRect);
         AddChild(blocker);
 
-        _view = new LayoutView(kit, kit.Layout(LayoutName));
-        AddChild(_view);
-        _view.Hide(UnusedIds);
-        _view.SetText(TitleId, request.Title);
-        _view.SetText(MessageId, request.Message);
-        _edit = _view.Get<LineEdit>(EditId);
-        if (_view.Get(MessageId) is Label message)
+        view = new LayoutView(kit, kit.Layout(LayoutName));
+        AddChild(view);
+        view.Hide(UnusedIds);
+        view.SetText(TitleId, request.Title);
+        view.SetText(MessageId, request.Message);
+        edit = view.Get<LineEdit>(EditId);
+        if (view.Get(MessageId) is Label message)
         {
             message.HorizontalAlignment = HorizontalAlignment.Center;
             message.VerticalAlignment = VerticalAlignment.Center;
             message.AutowrapMode = TextServer.AutowrapMode.WordSmart;
-            if (_edit != null && message.Position.Y + message.Size.Y > _edit.Position.Y - MessageGapAboveEdit)
-                message.Size = new Vector2(message.Size.X, Mathf.Max(0f, _edit.Position.Y - MessageGapAboveEdit - message.Position.Y));
+            if (edit != null && message.Position.Y + message.Size.Y > edit.Position.Y - MessageGapAboveEdit)
+                message.Size = new Vector2(message.Size.X, Mathf.Max(0f, edit.Position.Y - MessageGapAboveEdit - message.Position.Y));
         }
-        if (_edit != null)
+        if (edit != null)
         {
-            _edit.Text = request.Initial;
-            _edit.PlaceholderText = request.Placeholder;
-            _edit.MaxLength = request.MaxLength;
-            _edit.Secret = request.Secret;
-            _edit.TextSubmitted += _request.Submit;
+            edit.Text = request.Initial;
+            edit.PlaceholderText = request.Placeholder;
+            edit.MaxLength = request.MaxLength;
+            edit.Secret = request.Secret;
+            edit.TextSubmitted += this.request.Submit;
         }
-        _view.OnPressed(ConfirmId, () => _request.Submit(_edit?.Text ?? ""));
-        _view.OnPressed(CancelId, _request.Cancel);
+        view.OnPressed(ConfirmId, () => this.request.Submit(edit?.Text ?? ""));
+        view.OnPressed(CancelId, this.request.Cancel);
     }
 
     public override void _EnterTree()
     {
         GetViewport().SizeChanged += Center;
         Center();
-        _edit?.CallDeferred(Control.MethodName.GrabFocus);
+        edit?.CallDeferred(Control.MethodName.GrabFocus);
     }
 
     public override void _ExitTree() => GetViewport().SizeChanged -= Center;
@@ -69,7 +69,7 @@ public partial class TextBox : Control
     private void Center()
     {
         var room = GetViewport().GetVisibleRect().Size;
-        _view.Position = ((room - _view.Size) * 0.5f).Round();
+        view.Position = ((room - view.Size) * 0.5f).Round();
     }
 
     public override void _Input(InputEvent ev)
@@ -78,12 +78,12 @@ public partial class TextBox : Control
         if (k.Keycode == Key.Escape)
         {
             GetViewport().SetInputAsHandled();
-            _request.Cancel();
+            request.Cancel();
         }
-        else if (k.Keycode is Key.Enter or Key.KpEnter && _edit?.HasFocus() != true)
+        else if (k.Keycode is Key.Enter or Key.KpEnter && edit?.HasFocus() != true)
         {
             GetViewport().SetInputAsHandled();
-            _request.Submit(_edit?.Text ?? "");
+            request.Submit(edit?.Text ?? "");
         }
     }
 }

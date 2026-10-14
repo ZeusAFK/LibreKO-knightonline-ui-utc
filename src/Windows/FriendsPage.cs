@@ -21,48 +21,48 @@ public sealed class FriendsPage
     private static readonly Color OnlineColour = new(1f, 1f, 1f);
     private static readonly Color OfflineColour = new(0.6f, 0.6f, 0.6f);
 
-    private readonly LayoutView _view;
-    private readonly IGameFriends _friends;
-    private readonly RetailList _list;
+    private readonly LayoutView view;
+    private readonly IGameFriends friends;
+    private readonly RetailList list;
 
-    public LayoutView View => _view;
+    public LayoutView View => view;
 
     public FriendsPage(UiKit kit, IGameFriends friends)
     {
-        _friends = friends;
+        this.friends = friends;
         var layout = kit.Layout(LayoutName);
-        _view = new LayoutView(kit, layout);
+        view = new LayoutView(kit, layout);
         var rows = layout.Children
             .Where(n => n.Id.StartsWith(RowPrefix, StringComparison.Ordinal) && int.TryParse(n.Id[RowPrefix.Length..], out _))
             .OrderBy(n => int.Parse(n.Id[RowPrefix.Length..]));
-        _list = new RetailList(_view, rows, PaintRow, _view.Get(SelectBar), layout.Find(Scrollbar));
-        _list.Activated += name => _friends.Whisper(name);
-        _list.ContextRequested += (name, at) => _friends.ShowPlayerMenu(name, at);
-        _view.OnPressed("btn_add", _friends.Add);
-        _view.OnPressed("Btn_Delete", () => WithSelected(_friends.Remove));
-        _view.OnPressed("btn_whisper", () => WithSelected(_friends.Whisper));
-        _view.OnPressed("btn_party", () => WithSelected(_friends.InviteToParty));
-        _view.OnPressed("btn_refresh", _friends.Refresh);
-        _view.Hide(MailButton);
-        foreach (var (id, text) in Legends) _view.SetText(id, text);
+        list = new RetailList(view, rows, PaintRow, view.Get(SelectBar), layout.Find(Scrollbar));
+        list.Activated += name => this.friends.Whisper(name);
+        list.ContextRequested += (name, at) => this.friends.ShowPlayerMenu(name, at);
+        view.OnPressed("btn_add", this.friends.Add);
+        view.OnPressed("Btn_Delete", () => WithSelected(this.friends.Remove));
+        view.OnPressed("btn_whisper", () => WithSelected(this.friends.Whisper));
+        view.OnPressed("btn_party", () => WithSelected(this.friends.InviteToParty));
+        view.OnPressed("btn_refresh", this.friends.Refresh);
+        view.Hide(MailButton);
+        foreach (var (id, text) in Legends) view.SetText(id, text);
     }
 
     private void WithSelected(Action<string> action)
     {
-        if (_list.SelectedKey is { } name) action(name);
+        if (list.SelectedKey is { } name) action(name);
     }
 
     public void Refresh()
     {
-        var entries = _friends.Entries;
+        var entries = friends.Entries;
         var items = entries
             .OrderByDescending(f => f.Online)
             .ThenBy(f => f.Name, StringComparer.OrdinalIgnoreCase)
             .Select(f => new RetailListItem(f.Name, f.Name, f.Online ? OnlineColour : OfflineColour,
                 f.InParty ? IconParty : f.Online ? IconOnline : IconOffline, Tooltip(f)))
             .ToList();
-        _list.SetItems(items);
-        _view.SetText(Count, $"{entries.Count(f => f.Online)}/{entries.Count}");
+        list.SetItems(items);
+        view.SetText(Count, $"{entries.Count(f => f.Online)}/{entries.Count}");
     }
 
     private static string Tooltip(GameFriend f)
@@ -78,7 +78,7 @@ public sealed class FriendsPage
     {
         foreach (var child in row.Children)
         {
-            if (_view.ControlOf(child) is not { } control) continue;
+            if (view.ControlOf(child) is not { } control) continue;
             int icon = Array.IndexOf(IconIds, child.Id);
             if (icon >= 0) control.Visible = item is { } shown && shown.Icon == icon;
             else if (child.Id == NameText && control is Label label)

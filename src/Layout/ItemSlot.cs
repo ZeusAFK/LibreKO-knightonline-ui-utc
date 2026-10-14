@@ -24,65 +24,65 @@ public partial class ItemSlot : Control
     public Action<int, bool>? OnHover { get; set; }
     public GameItem Current { get; private set; }
 
-    private readonly TextureRect _icon;
-    private readonly Label _count;
-    private readonly ColorRect _hover;
-    private readonly UpgradeBadge _badge;
-    private bool _suppressClick;
+    private readonly TextureRect icon;
+    private readonly Label count;
+    private readonly ColorRect hover;
+    private readonly UpgradeBadge badge;
+    private bool suppressClick;
 
     public ItemSlot(int slot)
     {
         Slot = slot;
         MouseFilter = MouseFilterEnum.Stop;
-        _hover = new ColorRect { Color = HoverTint, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
-        _hover.SetAnchorsPreset(LayoutPreset.FullRect);
-        AddChild(_hover);
-        _icon = new TextureRect
+        hover = new ColorRect { Color = HoverTint, Visible = false, MouseFilter = MouseFilterEnum.Ignore };
+        hover.SetAnchorsPreset(LayoutPreset.FullRect);
+        AddChild(hover);
+        icon = new TextureRect
         {
             ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
             StretchMode = TextureRect.StretchModeEnum.Scale,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _icon.SetAnchorsPreset(LayoutPreset.FullRect);
-        _icon.OffsetLeft = IconInset; _icon.OffsetTop = IconInset;
-        _icon.OffsetRight = -IconInset; _icon.OffsetBottom = -IconInset;
-        AddChild(_icon);
-        _count = new Label
+        icon.SetAnchorsPreset(LayoutPreset.FullRect);
+        icon.OffsetLeft = IconInset; icon.OffsetTop = IconInset;
+        icon.OffsetRight = -IconInset; icon.OffsetBottom = -IconInset;
+        AddChild(icon);
+        count = new Label
         {
             HorizontalAlignment = HorizontalAlignment.Right,
             VerticalAlignment = VerticalAlignment.Bottom,
             MouseFilter = MouseFilterEnum.Ignore,
         };
-        _count.SetAnchorsPreset(LayoutPreset.FullRect);
-        _count.OffsetRight = -CountInset;
-        _count.OffsetBottom = -CountInset;
-        _count.AddThemeFontSizeOverride("font_size", CountFontSize);
-        _count.AddThemeColorOverride("font_color", Colors.White);
-        _count.AddThemeColorOverride("font_outline_color", Colors.Black);
-        _count.AddThemeConstantOverride("outline_size", 3);
-        AddChild(_count);
-        _badge = UpgradeBadge.Attach(this);
-        MouseEntered += () => { _hover.Visible = true; if (!Current.IsEmpty) OnHover?.Invoke(Slot, true); };
-        MouseExited += () => { _hover.Visible = false; OnHover?.Invoke(Slot, false); };
+        count.SetAnchorsPreset(LayoutPreset.FullRect);
+        count.OffsetRight = -CountInset;
+        count.OffsetBottom = -CountInset;
+        count.AddThemeFontSizeOverride("font_size", CountFontSize);
+        count.AddThemeColorOverride("font_color", Colors.White);
+        count.AddThemeColorOverride("font_outline_color", Colors.Black);
+        count.AddThemeConstantOverride("outline_size", 3);
+        AddChild(count);
+        badge = UpgradeBadge.Attach(this);
+        MouseEntered += () => { hover.Visible = true; if (!Current.IsEmpty) OnHover?.Invoke(Slot, true); };
+        MouseExited += () => { hover.Visible = false; OnHover?.Invoke(Slot, false); };
     }
 
     public void Refresh()
     {
         Current = Source(Slot);
-        _icon.Texture = Current.IsEmpty ? null : Current.Icon;
-        _icon.Modulate = Colors.White;
-        _count.Text = Current.Count > 1 ? Current.Count.ToString() : "";
-        if (Current.IsEmpty) _badge.Clear(); else _badge.Set(Current.ItemId);
+        icon.Texture = Current.IsEmpty ? null : Current.Icon;
+        icon.Modulate = Colors.White;
+        count.Text = Current.Count > 1 ? Current.Count.ToString() : "";
+        if (Current.IsEmpty) badge.Clear(); else badge.Set(Current.ItemId);
     }
 
-    public void SetGhost(Texture2D? icon)
+    public void SetGhost(Texture2D? texture)
     {
         if (!Current.IsEmpty) return;
-        _icon.Texture = icon;
-        _icon.Modulate = GhostTint;
+        icon.Texture = texture;
+        icon.Modulate = GhostTint;
     }
 
-    public void SetCarried(bool carried) => _icon.Modulate = carried ? CarriedTint : Colors.White;
+    public void SetCarried(bool carried) => icon.Modulate = carried ? CarriedTint : Colors.White;
 
     public override void _GuiInput(InputEvent ev)
     {
@@ -98,13 +98,13 @@ public partial class ItemSlot : Control
         {
             if (mb.DoubleClick)
             {
-                _suppressClick = true;
+                suppressClick = true;
                 OnDoubleClick?.Invoke(Slot);
             }
             AcceptEvent();
             return;
         }
-        if (_suppressClick) { _suppressClick = false; AcceptEvent(); return; }
+        if (suppressClick) { suppressClick = false; AcceptEvent(); return; }
         OnClick?.Invoke(Slot);
         AcceptEvent();
     }
@@ -112,7 +112,7 @@ public partial class ItemSlot : Control
     public override Variant _GetDragData(Vector2 atPosition)
     {
         if (Current.IsEmpty) return default;
-        _suppressClick = false;
+        suppressClick = false;
         OnHover?.Invoke(Slot, false);
         var preview = new TextureRect
         {
@@ -134,7 +134,7 @@ public partial class ItemSlot : Control
 
     public override void _DropData(Vector2 atPosition, Variant data)
     {
-        _hover.Visible = false;
+        hover.Visible = false;
         OnDrop?.Invoke(data.AsGodotDictionary()[DragKeyFrom].AsInt32(), Slot);
     }
 }
