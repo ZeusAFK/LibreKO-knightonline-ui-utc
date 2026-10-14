@@ -133,12 +133,12 @@ public partial class GenieWindow : Control
             s => s.MpPercent, (s, v) => s.MpPercent = v, v => $"{v}%");
         Bar("scr_pet_recovery_rate", "RecoveryPet_str", GenieSetup.MinPercent, GenieSetup.MaxPercent,
             s => s.PetPercent, (s, v) => s.PetPercent = v, v => $"{v}%");
-        for (int i = 0; i < GenieSetup.AttackCells; i++) _attackCells.Add(Cell((i + 1).ToString(), GenieCellKind.Attack, i));
+        for (int i = 0; i < GenieSetup.AttackCells; i++) if (Cell((i + 1).ToString(), GenieCellKind.Attack, i) is { } attack) _attackCells.Add(attack);
         for (int i = 0; i < GenieSetup.RecoveryCells; i++)
-            _recoveryCells.Add(Cell((RecoveryCellsFirstArea + i).ToString(), GenieCellKind.Recovery, i));
+            if (Cell((RecoveryCellsFirstArea + i).ToString(), GenieCellKind.Recovery, i) is { } recovery) _recoveryCells.Add(recovery);
         for (int i = 0; i < GenieSetup.SupportCells; i++)
         {
-            _supportCells.Add(Cell((SupportFirstArea + i).ToString(), GenieCellKind.Support, i));
+            if (Cell((SupportFirstArea + i).ToString(), GenieCellKind.Support, i) is { } support) _supportCells.Add(support);
             int index = i;
             if (_view.Get<TextureButton>($"btn_party_{i + 1}") is { } party)
             {
