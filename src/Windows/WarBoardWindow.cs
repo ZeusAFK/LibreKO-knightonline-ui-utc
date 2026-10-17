@@ -2,6 +2,7 @@ using Godot;
 using KnightOnlineUi.Layout;
 using LibreKO;
 using LibreKO.Domain;
+using LibreKO.Network;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -56,8 +57,8 @@ public partial class WarBoardWindow : Control
             }
         }
 
-        view.OnPressed("tab_deal", () => game.Party.SetWarBoardMode(PartyWarBoard.ModeDamage));
-        view.OnPressed("tab_heal", () => game.Party.SetWarBoardMode(PartyWarBoard.ModeHealing));
+        view.OnPressed("tab_deal", () => game.Party.SetWarBoardMode(PartyBoardMeterMode.Damage));
+        view.OnPressed("tab_heal", () => game.Party.SetWarBoardMode(PartyBoardMeterMode.Healing));
         view.OnPressed("close", () => game.Party.ToggleWarBoard());
         foreach (var id in new[] { "tab_deal", "tab_heal" })
             if (view.Get<TextureButton>(id) is { } tab) tab.ToggleMode = true;
@@ -90,8 +91,8 @@ public partial class WarBoardWindow : Control
         var party = game.Party;
         Visible = party.InParty && party.WarBoardOpen;
         if (!Visible) return;
-        if (view.Get<TextureButton>("tab_deal") is { } deal) deal.SetPressedNoSignal(party.WarBoardMode == PartyWarBoard.ModeDamage);
-        if (view.Get<TextureButton>("tab_heal") is { } heal) heal.SetPressedNoSignal(party.WarBoardMode == PartyWarBoard.ModeHealing);
+        if (view.Get<TextureButton>("tab_deal") is { } deal) deal.SetPressedNoSignal(party.WarBoardMode == PartyBoardMeterMode.Damage);
+        if (view.Get<TextureButton>("tab_heal") is { } heal) heal.SetPressedNoSignal(party.WarBoardMode == PartyBoardMeterMode.Healing);
         if (view.Get(Background) is { } background) background.Modulate = new Color(1, 1, 1, party.WarBoardAlpha);
 
         var lines = party.WarBoardRows;

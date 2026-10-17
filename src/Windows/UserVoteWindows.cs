@@ -1,6 +1,7 @@
 using Godot;
 using KnightOnlineUi.Layout;
 using LibreKO.Domain;
+using LibreKO.Network;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -105,9 +106,9 @@ public partial class UserVoteAskWindow : Control
         group = layout.Find(MessageGroup);
         host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, Width, TitleBarHeight)));
         if (group == null) return;
-        view.OnPressed(group, "btn_yes", () => game.UserVote.Answer(UserVote.AnswerYes));
-        view.OnPressed(group, "btn_draw", () => game.UserVote.Answer(UserVote.AnswerDraw));
-        view.OnPressed(group, "btn_no", () => game.UserVote.Answer(UserVote.AnswerNo));
+        view.OnPressed(group, "btn_yes", () => game.UserVote.Answer(UserVoteAnswer.Yes));
+        view.OnPressed(group, "btn_draw", () => game.UserVote.Answer(UserVoteAnswer.Draw));
+        view.OnPressed(group, "btn_no", () => game.UserVote.Answer(UserVoteAnswer.No));
     }
 
     public override void _EnterTree()

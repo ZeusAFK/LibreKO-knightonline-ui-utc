@@ -2,6 +2,7 @@ using Godot;
 using KnightOnlineUi.Layout;
 using LibreKO;
 using LibreKO.Domain;
+using LibreKO.Network;
 using LibreKO.Plugins;
 
 namespace KnightOnlineUi.Windows;
@@ -144,9 +145,9 @@ public partial class PartyHud : Control
             rejoin.SetPressedNoSignal(game.Party.AutoRejoin);
             rejoin.TooltipText = game.Party.AutoRejoinTip;
         }
-        byte meterMode = game.Party.RowMeterMode;
-        bool meterOn = meterMode != PartyWarBoard.ModeOff;
-        if (view.Get(MeterToggle) is { } toggle && meterMode < MeterTips.Length) toggle.TooltipText = MeterTips[meterMode];
+        var meterMode = game.Party.RowMeterMode;
+        bool meterOn = meterMode != PartyBoardMeterMode.Off;
+        if (view.Get(MeterToggle) is { } toggle && (int)meterMode < MeterTips.Length) toggle.TooltipText = MeterTips[(int)meterMode];
         var members = game.Party.Members;
         int bottom = TitleBarHeight;
         for (int i = 0; i < MaxRows; i++)
