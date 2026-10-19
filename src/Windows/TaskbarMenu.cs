@@ -58,7 +58,7 @@ public partial class TaskbarMenu : Control
             view.OnPressed(button, () => Run(() => game.Windows.Toggle(window)));
         view.OnPressed("btn_trade", () => Run(game.Commands.TradeWithTarget));
         view.OnPressed("btn_party", () => Run(game.Commands.InviteTarget));
-        view.OnPressed("btn_option", () => Run(() => SettingsPanel.Open(GetTree().Root)));
+        view.OnPressed("btn_option", () => Run(game.Commands.OpenSettings));
         view.OnPressed("btn_exit", () => Run(game.Commands.ShowExitMenu));
         foreach (var id in Unavailable)
             if (view.Get<BaseButton>(id) is { } off)
