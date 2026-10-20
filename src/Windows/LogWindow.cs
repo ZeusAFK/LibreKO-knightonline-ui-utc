@@ -30,6 +30,14 @@ public partial class LogWindow : Control
     private const string SettingShadeIndex = "log.shadeIndex";
     private static readonly float[] ShadeLevels = { 0.75f, 0.5f, 0.25f, 0f };
     private const float DefaultShade = 0.45f;
+    private const string ScrollGroup = "scroll";
+    private const string ScrollUpId = "btn_scroll_Up";
+    private const string ScrollTrackId = "scroll_bar";
+    private const string LockButtonId = "btn_msgwnd_lock";
+    private const string SettingLocked = "log.locked";
+    private const float ScrollStep = 32f;
+    private const double RepeatDelay = 0.4;
+    private const double RepeatEvery = 0.08;
 
     private readonly LayoutView view;
     private readonly PluginGame game;
@@ -92,6 +100,33 @@ public partial class LogWindow : Control
         };
         if (area != null) area.Visible = false;
         (area?.GetParent() ?? (Node)view).AddChild(log);
+
+        if (layout.Find(ScrollGroup) is { } scroll)
+        {
+            foreach (var child in scroll.Children)
+                if (child.IsButton && view.ControlOf(child) is BaseButton button)
+                    HoldRepeat(button, child.Id == ScrollUpId ? ScrollStep : -ScrollStep);
+        }
+        if (view.Get(ScrollTrackId) is { } track)
+        {
+            track.MouseFilter = MouseFilterEnum.Stop;
+            track.GuiInput += input =>
+            {
+                if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left } click) return;
+                log.Scroll(click.Position.Y < track.Size.Y * 0.5f ? log.Size.Y : -log.Size.Y);
+                track.AcceptEvent();
+            };
+        }
+        if (view.Get<TextureButton>(LockButtonId) is { } lockButton)
+        {
+            lockButton.ToggleMode = true;
+            lockButton.ButtonPressed = settings.GetBool(SettingLocked, false);
+            lockButton.Toggled += locked =>
+            {
+                settings.SetBool(SettingLocked, locked);
+                if (hudLayout != null) hudLayout.Locked = locked;
+            };
+        }
 
         var group = new ButtonGroup();
         foreach (var (button, kind) in Tabs)
@@ -158,7 +193,25 @@ public partial class LogWindow : Control
             defaultSize: baseSize, minimumSize: baseSize, resizeCorner: HudLayout.Corner.TopLeft,
             backgroundOpacityChanged: _ => CycleShade());
         hudLayout.MaximumViewportShare = MaximumScreenShare;
+        hudLayout.Locked = settings.GetBool(SettingLocked, false);
         Reload();
+    }
+
+    private void HoldRepeat(BaseButton button, float step)
+    {
+        var timer = new Godot.Timer { OneShot = false };
+        AddChild(timer);
+        button.ButtonDown += () =>
+        {
+            log.Scroll(step);
+            timer.Start(RepeatDelay);
+        };
+        button.ButtonUp += timer.Stop;
+        timer.Timeout += () =>
+        {
+            log.Scroll(step);
+            timer.Start(RepeatEvery);
+        };
     }
 
     public override void _ExitTree()

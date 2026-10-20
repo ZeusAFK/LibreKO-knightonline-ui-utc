@@ -53,13 +53,23 @@ public partial class WhisperWindow : Control
     {
         game.Whispers.LineAdded += OnLine;
         game.Whispers.Changed += OnChanged;
+        game.Whispers.CollapseRequested += OnCollapseRequested;
+        game.Whispers.SetCollapsed(name, collapsed);
     }
 
     public override void _ExitTree()
     {
         game.Whispers.LineAdded -= OnLine;
         game.Whispers.Changed -= OnChanged;
+        game.Whispers.CollapseRequested -= OnCollapseRequested;
         game.Chat.SetTyping(false);
+    }
+
+    private void OnCollapseRequested(string name)
+    {
+        if (!string.Equals(name, this.name, System.StringComparison.OrdinalIgnoreCase)) return;
+        input?.ReleaseFocus();
+        SetCollapsed(true);
     }
 
     private void Build()
@@ -189,6 +199,7 @@ public partial class WhisperWindow : Control
     {
         if (this.collapsed == collapsed) return;
         this.collapsed = collapsed;
+        game.Whispers.SetCollapsed(name, collapsed);
         Build();
         if (!collapsed) input?.CallDeferred(Control.MethodName.GrabFocus);
     }
