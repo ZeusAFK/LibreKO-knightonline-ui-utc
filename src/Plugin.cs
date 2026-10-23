@@ -41,9 +41,12 @@ public sealed class Plugin : IPlugin
         ui.ReplaceWindow("equipview", host => new EquipViewWindow(host));
         ui.ReplaceWindow("cape", host => new CapeShopWindow(host));
         ui.ReplaceWindow("genie", host => new GenieWindow(host));
+        ui.ReplaceWindow("draki_board", host => new DrakiRankWindow(host));
         ui.ReplaceHud(HudPart.GenieSub, () => new GenieSubWindow());
         ui.ReplaceHud(HudPart.Party, () => new PartyHud());
         ui.ReplaceHud(HudPart.WarBoard, () => new WarBoardWindow());
+        ui.ReplaceHud(HudPart.DrakiPlate, () => new DrakiPlate());
+        ui.ReplaceHud(HudPart.DrakiFloor, () => new DrakiFloorBanner());
         ui.ReplacePlayerMenu(request => new PlayerMenu(request));
         ui.ReplaceExitMenu(request => new ExitMenu(request));
         ui.AddHud(() => new Taskbar());

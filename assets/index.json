@@ -721,6 +721,52 @@
     "re_main_ui_02.png",
     "re_quest_npc_menu01.png"
    ]
+  },
+  "re_draky_chapter": {
+   "file": "layouts/re_draky_chapter.json",
+   "rect": [
+    0,
+    0,
+    275,
+    169
+   ],
+   "textures": [
+    "re_chatroom.png",
+    "re_login_intro01.png",
+    "re_main_ui_01.png"
+   ]
+  },
+  "ui_drakyfloor": {
+   "file": "layouts/ui_drakyfloor.json",
+   "rect": [
+    0,
+    73,
+    539,
+    176
+   ],
+   "textures": [
+    "ui_drakyfloor.png",
+    "ui_drakyfloor_sub.png"
+   ]
+  },
+  "re_draky_rank": {
+   "file": "layouts/re_draky_rank.json",
+   "rect": [
+    -8,
+    0,
+    427,
+    503
+   ],
+   "textures": [
+    "co_black.png",
+    "re_character_seal_01.png",
+    "re_character_seal_02.png",
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_seed_02.png",
+    "re_seed_03.png",
+    "re_vote_board_1.png"
+   ]
   }
  },
  "textures": {
@@ -1283,6 +1329,26 @@
   "co_pat_ui.png": [
    512,
    512
+  ],
+  "re_login_intro01.png": [
+   512,
+   512
+  ],
+  "ui_drakyfloor.png": [
+   512,
+   512
+  ],
+  "ui_drakyfloor_sub.png": [
+   512,
+   512
+  ],
+  "re_vote_board_1.png": [
+   512,
+   512
+  ],
+  "co_black.png": [
+   32,
+   32
   ]
  },
  "missingTextures": [
