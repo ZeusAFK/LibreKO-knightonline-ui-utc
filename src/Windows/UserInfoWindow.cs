@@ -22,7 +22,7 @@ public partial class UserInfoWindow : Control
 
     private readonly PluginGame game;
     private readonly LayoutView view;
-    private readonly Dictionary<Label, TextureRect> ribbons = new();
+    private readonly RankRibbonCells ribbons;
     private readonly Texture2D? noClanMark;
 
     public UserInfoWindow(WindowHost host)
@@ -30,6 +30,7 @@ public partial class UserInfoWindow : Control
         var kit = Plugin.Kit;
         game = kit.Game;
         view = new LayoutView(kit, kit.Layout(LayoutName));
+        ribbons = new RankRibbonCells(view);
         MouseFilter = MouseFilterEnum.Stop;
         AddChild(view);
         host.SetDragHandle(view.MakeDragHandle(new Rect2(0, 0, view.Size.X, TitleBarHeight)));
@@ -63,7 +64,7 @@ public partial class UserInfoWindow : Control
         ShowClan(card);
 
         for (int i = 0; i < UserInfoCard.SummaryCells; i++)
-            ShowRibbon(string.Format(SummaryFormat, i), i < card.Summary.Count ? card.Summary[i] : null);
+            ribbons.Show(string.Format(SummaryFormat, i), i < card.Summary.Count ? card.Summary[i] : null);
 
         for (int r = 0; r < UserInfoCard.RankRows; r++)
         {
@@ -78,7 +79,7 @@ public partial class UserInfoWindow : Control
             for (int t = 0; t < UserInfoCard.Tiers; t++)
             {
                 GameRankRibbon? tier = used && row.Tiers != null && t < row.Tiers.Count && row.Tiers[t].Ribbon != null ? row.Tiers[t] : null;
-                ShowRibbon(string.Format(TierFormat, r, t), tier);
+                ribbons.Show(string.Format(TierFormat, r, t), tier);
             }
         }
     }
@@ -111,30 +112,5 @@ public partial class UserInfoWindow : Control
             mark.ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize;
             mark.StretchMode = TextureRect.StretchModeEnum.KeepAspectCentered;
         }
-    }
-
-    private void ShowRibbon(string id, GameRankRibbon? ribbon)
-    {
-        if (view.Get<Label>(id) is not { } label) return;
-        label.Visible = ribbon != null;
-        label.Text = ribbon?.Count ?? "";
-        label.TooltipText = ribbon?.Tooltip ?? "";
-        label.MouseFilter = ribbon != null && ribbon.Value.Tooltip.Length > 0 ? MouseFilterEnum.Pass : MouseFilterEnum.Ignore;
-        if (!ribbons.TryGetValue(label, out var image))
-        {
-            image = new TextureRect
-            {
-                Position = label.Position,
-                Size = label.Size,
-                ExpandMode = TextureRect.ExpandModeEnum.IgnoreSize,
-                StretchMode = TextureRect.StretchModeEnum.Scale,
-                MouseFilter = MouseFilterEnum.Ignore,
-            };
-            label.AddSibling(image);
-            label.GetParent().MoveChild(image, label.GetIndex());
-            ribbons[label] = image;
-        }
-        image.Texture = ribbon?.Ribbon;
-        image.Visible = ribbon != null;
     }
 }
