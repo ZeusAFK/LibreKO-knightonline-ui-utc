@@ -22,7 +22,23 @@ public partial class ChatWindow : Control
     private const float ScrollStep = 32f;
     private const int DefaultFontSize = 12;
     private const string PrefixChars = "@!#$%&~|\\/+";
-    private static readonly string[] UserRowIds = { "str_name", "img_clan", "img_userbg", "img_0", "img_1", "img_2", "img_3" };
+    private const string UserListId = "base_mapuserlist";
+    private const string UserRowPrefix = "base_num";
+    private const string UserNameId = "str_name";
+    private const string UserClanId = "img_clan";
+    private const string UserBackgroundId = "img_userbg";
+    private const string ConnectTabId = "btn_connect";
+    private const string LocationTabId = "btn_location";
+    private const string PageLeftId = "btn_left";
+    private const string PageRightId = "btn_right";
+    private const string PageNumberId = "str_pagenum";
+    private const int BaseUserRows = 7;
+    private const float UserRowPitch = 19f;
+    private const string UserMenuTip = "Right-click for the player menu";
+    private static readonly string[] UserStatusIds = { "img_0", "img_1", "img_2", "img_3" };
+    private static readonly Color SelfNameColor = new(1f, 1f, 0f);
+    private static readonly Color AllyNameColor = new(0.45f, 0.72f, 1f);
+    private static readonly Color EnemyNameColor = new(1f, 0.38f, 0.38f);
     private static readonly string[] InputRowIds = { "img_edit1", "img_edit_bg" };
 
     private static readonly (string Button, string Prefix)[] ChannelTabs =
@@ -85,6 +101,21 @@ public partial class ChatWindow : Control
     private VerticalGrow? grow;
     private bool relaying;
     private HudLayout? hudLayout;
+    private readonly List<UserRow> userRows = new();
+    private Label? pageNumber;
+    private float userTop;
+    private int userPage;
+    private bool byLocation;
+
+    private sealed class UserRow
+    {
+        public Control Root = null!;
+        public Label? Name;
+        public TextureRect? Clan;
+        public Control? Background;
+        public readonly Control?[] Status = new Control?[UserStatusIds.Length];
+        public string Who = "";
+    }
 
     private static readonly HashSet<string> StretchIds = new()
     {
@@ -114,7 +145,7 @@ public partial class ChatWindow : Control
         Size = layout.SizeVec;
         AddChild(view);
         view.Hide("img_edit2", "img_sizechange", "btn_knights", "btn_force", NoahButton, FilterPanel);
-        view.Hide(UserRowIds);
+        BuildUserList(layout);
         view.FadeOut(OpaqueBackgroundId);
         foreach (var (_, control) in view.Where(n => n.Id.StartsWith(UserCheckPrefix)))
             control.Visible = false;
@@ -231,6 +262,110 @@ public partial class ChatWindow : Control
         }
     }
 
+    private void BuildUserList(LayoutNode layout)
+    {
+        if (layout.Find(UserListId) is not { } list) return;
+        var rows = list.Children
+            .Where(n => n.Id.StartsWith(UserRowPrefix) && int.TryParse(n.Id[UserRowPrefix.Length..], out _))
+            .OrderBy(n => int.Parse(n.Id[UserRowPrefix.Length..]))
+            .ToList();
+        userTop = rows.Take(BaseUserRows).Select(n => (float)(n.Y - list.Y)).DefaultIfEmpty(0f).Min();
+        foreach (var node in rows)
+        {
+            if (view.ControlOf(node) is not { } root) continue;
+            var row = new UserRow
+            {
+                Root = root,
+                Name = view.Get<Label>(node, UserNameId),
+                Clan = view.Get<TextureRect>(node, UserClanId),
+                Background = view.Get(node, UserBackgroundId),
+            };
+            for (int i = 0; i < UserStatusIds.Length; i++) row.Status[i] = view.Get(node, UserStatusIds[i]);
+            if (row.Background != null) row.Background.Visible = false;
+            root.MouseFilter = MouseFilterEnum.Stop;
+            root.TooltipText = UserMenuTip;
+            root.GuiInput += input =>
+            {
+                if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Right } || row.Who.Length == 0) return;
+                root.AcceptEvent();
+                game.ZoneUsers.ShowMenu(row.Who, root.GetGlobalMousePosition());
+            };
+            root.Visible = false;
+            userRows.Add(row);
+        }
+
+        var group = new ButtonGroup();
+        foreach (var (id, location) in new[] { (ConnectTabId, false), (LocationTabId, true) })
+        {
+            if (view.Get<TextureButton>(id) is not { } tab) continue;
+            tab.ToggleMode = true;
+            tab.ButtonGroup = group;
+            tab.ButtonPressed = location == byLocation;
+            bool sortsByLocation = location;
+            tab.Pressed += () =>
+            {
+                byLocation = sortsByLocation;
+                userPage = 0;
+                RefreshUsers();
+            };
+        }
+        view.OnPressed(PageLeftId, () => TurnUserPage(-1));
+        view.OnPressed(PageRightId, () => TurnUserPage(1));
+        pageNumber = view.Get<Label>(PageNumberId);
+    }
+
+    private int UserRowsShown()
+    {
+        float extra = grow == null ? 0f : Mathf.Max(0f, Size.Y - baseSize.Y);
+        return Mathf.Min(userRows.Count, BaseUserRows + (int)(extra / UserRowPitch));
+    }
+
+    private void TurnUserPage(int step)
+    {
+        userPage += step;
+        RefreshUsers();
+    }
+
+    private void RefreshUsers()
+    {
+        if (userRows.Count == 0) return;
+        var users = game.ZoneUsers.Users;
+        var ordered = byLocation ? users.OrderBy(u => u.Distance).ToList() : users.ToList();
+        int perPage = Mathf.Max(1, UserRowsShown());
+        int pages = Mathf.Max(1, (ordered.Count + perPage - 1) / perPage);
+        userPage = Mathf.Clamp(userPage, 0, pages - 1);
+        if (pageNumber != null) pageNumber.Text = (userPage + 1).ToString();
+        for (int i = 0; i < userRows.Count; i++)
+        {
+            var row = userRows[i];
+            int index = userPage * perPage + i;
+            bool shown = i < perPage && index < ordered.Count;
+            row.Root.Visible = shown;
+            row.Who = shown ? ordered[index].Name : "";
+            if (!shown) continue;
+            var user = ordered[index];
+            row.Root.Position = new Vector2(row.Root.Position.X, userTop + i * UserRowPitch);
+            if (row.Name != null)
+            {
+                row.Name.Text = user.Shown;
+                row.Name.AddThemeColorOverride("font_color", user.Self ? SelfNameColor : user.Enemy ? EnemyNameColor : AllyNameColor);
+            }
+            if (row.Clan != null)
+            {
+                row.Clan.Texture = user.ClanMark;
+                row.Clan.Visible = user.ClanMark != null;
+            }
+            int statusShown = user.State switch
+            {
+                GameZoneUserState.Merchant => 2,
+                GameZoneUserState.Gathering => 3,
+                _ => 1,
+            };
+            for (int s = 0; s < row.Status.Length; s++)
+                if (row.Status[s] is { } icon) icon.Visible = s == statusShown;
+        }
+    }
+
     private void SetShown(ChatCategory category, bool shown)
     {
         hidden = shown ? hidden & ~category : hidden | category;
@@ -281,6 +416,7 @@ public partial class ChatWindow : Control
         if (!Mathf.IsEqualApprox(Size.X, baseSize.X)) Size = new Vector2(baseSize.X, Size.Y);
         grow.Apply(Mathf.Max(0f, Size.Y - baseSize.Y));
         relaying = false;
+        RefreshUsers();
     }
 
     public override void _EnterTree()
@@ -290,6 +426,8 @@ public partial class ChatWindow : Control
         game.BecameAvailable += Reload;
         game.Character.Changed += RefreshChannels;
         game.BecameAvailable += RefreshChannels;
+        game.ZoneUsers.Changed += RefreshUsers;
+        game.ZoneUsers.Watch(true);
         hudLayout ??= HudLayout.Attach(this, LayoutId, dragButton, DefaultPosition, resizable: true,
             defaultSize: baseSize, minimumSize: baseSize, resizeCorner: HudLayout.Corner.TopRight,
             backgroundOpacityChanged: _ => CycleShade());
@@ -304,6 +442,8 @@ public partial class ChatWindow : Control
         game.BecameAvailable -= Reload;
         game.Character.Changed -= RefreshChannels;
         game.BecameAvailable -= RefreshChannels;
+        game.ZoneUsers.Changed -= RefreshUsers;
+        game.ZoneUsers.Watch(false);
     }
 
     public override void _Input(InputEvent ev)
