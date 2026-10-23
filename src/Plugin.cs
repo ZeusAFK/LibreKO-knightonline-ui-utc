@@ -48,6 +48,7 @@ public sealed class Plugin : IPlugin
         ui.ReplaceHud(HudPart.DrakiPlate, () => new DrakiPlate());
         ui.ReplaceHud(HudPart.DrakiFloor, () => new DrakiFloorBanner());
         ui.ReplaceHud(HudPart.TempleSignUp, () => new TempleSignUpBoard());
+        ui.ReplaceHud(HudPart.ManesSurvival, () => new ManesSurvivalHud());
         ui.ReplacePlayerMenu(request => new PlayerMenu(request));
         ui.ReplaceExitMenu(request => new ExitMenu(request));
         ui.AddHud(() => new Taskbar());

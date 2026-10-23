@@ -805,6 +805,114 @@
    "textures": [
     "re_warp_list_2.png"
    ]
+  },
+  "re_survival_enter": {
+   "file": "layouts/re_survival_enter.json",
+   "rect": [
+    0,
+    0,
+    318,
+    132
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_survivalbosshpbar": {
+   "file": "layouts/re_survivalbosshpbar.json",
+   "rect": [
+    0,
+    0,
+    270,
+    158
+   ],
+   "textures": [
+    "ft_2_2015_a01.png",
+    "re_target_bar.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_survivalskillselect": {
+   "file": "layouts/re_survivalskillselect.json",
+   "rect": [
+    0,
+    0,
+    662,
+    610
+   ],
+   "textures": [
+    "re_fishing_ui01.png",
+    "re_survivalskill.png",
+    "skillicon_00_1055.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_survivalskillselectclose": {
+   "file": "layouts/re_survivalskillselectclose.json",
+   "rect": [
+    0,
+    0,
+    189,
+    32
+   ],
+   "textures": [
+    "re_main_ui_02.png",
+    "re_popup.png"
+   ]
+  },
+  "re_survivalpassiveview": {
+   "file": "layouts/re_survivalpassiveview.json",
+   "rect": [
+    0,
+    0,
+    649,
+    395
+   ],
+   "textures": [
+    "re_fishing_ui01.png",
+    "re_survivalskill.png",
+    "skillicon_00_1055.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_survivalpassiveskill": {
+   "file": "layouts/re_survivalpassiveskill.json",
+   "rect": [
+    0,
+    0,
+    476,
+    474
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_survivalskill.png"
+   ]
+  },
+  "re_survivalrank": {
+   "file": "layouts/re_survivalrank.json",
+   "rect": [
+    0,
+    0,
+    862,
+    642
+   ],
+   "textures": [
+    "re_survivalskill.png",
+    "tournament_chaos_2021_a01.png"
+   ]
+  },
+  "re_passivetooltip": {
+   "file": "layouts/re_passivetooltip.json",
+   "rect": [
+    0,
+    0,
+    208,
+    72
+   ],
+   "textures": [
+    "re_message_box.png"
+   ]
   }
  },
  "textures": {
@@ -1385,6 +1493,18 @@
    512
   ],
   "co_black.png": [
+   32,
+   32
+  ],
+  "ft_2_2015_a01.png": [
+   256,
+   256
+  ],
+  "re_survivalskill.png": [
+   512,
+   512
+  ],
+  "skillicon_00_1055.png": [
    32,
    32
   ]
