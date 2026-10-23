@@ -16,6 +16,7 @@ public partial class QuestTracker : Control
     private const string TitleBarId = "MiniBar_Title";
     private const string PageNumberId = "str_pagenum";
     private const string QuestsWindow = "quests";
+    private const string OpenQuestTip = "Open this quest in the journal";
     private const float ScreenMargin = 8f;
     private const float RowGap = 8f;
     private const int ObjectiveFontSize = 11;
@@ -75,6 +76,18 @@ public partial class QuestTracker : Control
         view.OnPressed("btn_nextpage", () => Turn(1));
         view.OnPressed("btn_change", () => game.Windows.Toggle(QuestsWindow));
         view.OnPressed("btn_seedopen", () => game.Windows.Toggle(QuestsWindow));
+        if (view.Get(QuestTitleId) is { } questTitle)
+        {
+            questTitle.MouseFilter = MouseFilterEnum.Stop;
+            questTitle.MouseDefaultCursorShape = CursorShape.PointingHand;
+            questTitle.TooltipText = OpenQuestTip;
+            questTitle.GuiInput += input =>
+            {
+                if (input is not InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left }) return;
+                questTitle.AcceptEvent();
+                OpenShownQuest();
+            };
+        }
         SetMinimised(false);
         SetObjectivesOpen(true);
     }
@@ -105,6 +118,13 @@ public partial class QuestTracker : Control
     }
 
     private void FollowRow() => hudLayout?.ReapplyDefault();
+
+    private void OpenShownQuest()
+    {
+        var quests = game.Quests.Tracked;
+        if (quests.Count == 0) return;
+        game.Quests.Open(quests[Mathf.Clamp(page, 0, quests.Count - 1)].QuestId);
+    }
 
     private void Turn(int delta)
     {
