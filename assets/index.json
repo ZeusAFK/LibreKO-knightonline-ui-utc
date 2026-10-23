@@ -767,6 +767,44 @@
     "re_seed_03.png",
     "re_vote_board_1.png"
    ]
+  },
+  "re_war_borderdefence_enter": {
+   "file": "layouts/re_war_borderdefence_enter.json",
+   "rect": [
+    0,
+    0,
+    318,
+    132
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_war_chaos_enter": {
+   "file": "layouts/re_war_chaos_enter.json",
+   "rect": [
+    0,
+    0,
+    318,
+    132
+   ],
+   "textures": [
+    "common_button_0.png",
+    "re_skill04.png"
+   ]
+  },
+  "re_war_icon": {
+   "file": "layouts/re_war_icon.json",
+   "rect": [
+    0,
+    0,
+    200,
+    35
+   ],
+   "textures": [
+    "re_warp_list_2.png"
+   ]
   }
  },
  "textures": {
