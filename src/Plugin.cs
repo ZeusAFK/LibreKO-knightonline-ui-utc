@@ -47,6 +47,7 @@ public sealed class Plugin : IPlugin
         ui.ReplacePlayerMenu(request => new PlayerMenu(request));
         ui.ReplaceExitMenu(request => new ExitMenu(request));
         ui.AddHud(() => new Taskbar());
+        ui.AddHud(() => new SchedulerWidget());
         context.Log.Info($"{Kit.LayoutCount} layouts, {Kit.TextureCount} textures");
     }
 

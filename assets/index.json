@@ -707,6 +707,20 @@
     "re_achieve_07.png",
     "re_auto_02.png"
    ]
+  },
+  "re_schedulerbutton": {
+   "file": "layouts/re_schedulerbutton.json",
+   "rect": [
+    -1,
+    0,
+    184,
+    210
+   ],
+   "textures": [
+    "re_main_ui_01.png",
+    "re_main_ui_02.png",
+    "re_quest_npc_menu01.png"
+   ]
   }
  },
  "textures": {
