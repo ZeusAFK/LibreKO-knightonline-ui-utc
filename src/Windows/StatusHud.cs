@@ -68,7 +68,7 @@ public partial class StatusHud : Control
         var c = game.Character;
         view.SetProgress("progress_HP", Fraction(c.Hp, c.MaxHp));
         view.SetProgress("Progress_msp", Fraction(c.Mp, c.MaxMp));
-        view.SetText("Text_HP", $"{c.Hp}/{c.MaxHp}");
+        view.SetText("Text_HP", $"{c.Hp * c.HpTextScale}/{c.MaxHp * c.HpTextScale}");
         view.SetText("Text_MSP", $"{c.Mp}/{c.MaxMp}");
         view.SetText("text_level_id", c.Name.Length > 0 ? $"Lv{c.Level} {c.Name}" : "");
         if (view.Get(MailIcon) is { } mail) mail.Visible = c.MailUnread > 0;
