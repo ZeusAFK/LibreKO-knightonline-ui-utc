@@ -51,6 +51,7 @@ public partial class TextBox : Control
             edit.PlaceholderText = request.Placeholder;
             edit.MaxLength = request.MaxLength;
             edit.Secret = request.Secret;
+            edit.VirtualKeyboardType = request.Secret ? LineEdit.VirtualKeyboardTypeEnum.Password : LineEdit.VirtualKeyboardTypeEnum.Default;
             edit.TextSubmitted += this.request.Submit;
         }
         view.OnPressed(ConfirmId, () => this.request.Submit(edit?.Text ?? ""));
