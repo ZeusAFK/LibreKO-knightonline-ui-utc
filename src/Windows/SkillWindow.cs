@@ -15,6 +15,7 @@ public partial class SkillWindow : Control
     private const float TitleBarHeight = 60f;
     private const float ListNameWidth = 130f;
     private const string PresetsWindow = "presets";
+    private const string QuickslotWindow = "quickslot_saves";
     private static readonly string[] TabFamilies = { "blade", "ranger", "mage", "cleric" };
     private static readonly string[] LabelFamilies = { "berserker", "hunter", "sorcerer", "shaman" };
     private const string MasterLabelText = "Master";
@@ -53,7 +54,7 @@ public partial class SkillWindow : Control
         view.OnPressed("btn_left", () => TurnPage(-1));
         view.OnPressed("btn_right", () => TurnPage(1));
         view.OnPressed("btn_preset", () => game.Windows.Toggle(PresetsWindow));
-        view.Hide("btn_preset_hotkey");
+        view.OnPressed("btn_preset_hotkey", () => game.Windows.Toggle(QuickslotWindow));
         for (int row = 0; row < TreeRows; row++)
         {
             int type = row;
